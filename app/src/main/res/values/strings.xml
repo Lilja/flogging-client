@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Flogging</string>
+    <string-array name="log_type">
+        <item>Worked</item>
+        <item>Paid leave</item>
+        <item>Flex time off</item>
+        <item>Other</item>
+    </string-array>
+    <string name="title_activity_new_log">NewLog</string>
+</resources>
