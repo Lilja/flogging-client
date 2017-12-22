@@ -20,25 +20,24 @@ class Flogs {
             return true
         }
 
-        fun isToday(d1 : DateTime, d2 : DateTime): Boolean {
+        fun isToday(d1: DateTime, d2: DateTime): Boolean {
             return d1.toLocalDate().isEqual(d2.toLocalDate())
         }
 
-        fun minutesToHHMM(int: Int) : String {
-            val hourRef = Math.abs(int/60)
-            val minuteRef = Math.abs(int%60)
+        fun minutesToHHMM(int: Int): String {
             Log.d("minutesToHHMM", int.toString())
-            Log.d("minutesToHHMM", hourRef.toString())
-            Log.d("minutesToHHMM", minuteRef.toString())
-            val hours = (if(int<0) "-" else "") + (if (hourRef<10) "0"+hourRef else hourRef).toString()
-            val minutes = (if (minuteRef<10) "0"+minuteRef else minuteRef).toString()
+            val hourRef = Math.abs(int / 60)
+            val minuteRef = Math.abs(int % 60)
+            val hours = (if (int < 0) "-" else "") + (if (hourRef < 10) "0" + hourRef else hourRef).toString()
+            val minutes = (if (minuteRef < 10) "0" + minuteRef else minuteRef).toString()
 
+            Log.d("minutesToHHMM", hours + ":" + minutes)
             return hours + ":" + minutes
         }
 
         fun hhMMWithDiff(str: String): String {
             if ("-" !in str) {
-                return "+"+str
+                return "+" + str
             }
             return str
         }

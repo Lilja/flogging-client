@@ -29,6 +29,7 @@
                 <Spinner
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:id="@+id/new_log_log_type"
                     android:entries="@array/log_type" />
 
                 <LinearLayout
@@ -60,7 +61,7 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/new_log_start_time"
                         android:inputType="time"
-                        android:hint="08:00"
+                        android:hint="08:30"
                         />
                     <Button
                         android:layout_width="wrap_content"
@@ -80,8 +81,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:id="@+id/new_log_end_time"
-                        android:inputType="time"
-                        android:text="17:00" />
+                        android:hint="17:30"
+                        android:inputType="time" />
                     <Button
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -98,10 +99,11 @@
                     android:orientation="horizontal">
 
                     <EditText
-                        android:layout_width="106dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="number"
-                        android:text="00" />
+                        android:id="@+id/new_log_break_time"
+                        android:hint="60" />
                 </LinearLayout>
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -120,12 +122,23 @@
                 <EditText
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
+                    android:id="@+id/new_log_note"
                     />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
                 <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Save"
                     android:id="@+id/new_log_save"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textStyle="bold"
+                    android:layout_marginLeft="5dp"
+                    android:id="@+id/new_log_output"/>
+                    </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 

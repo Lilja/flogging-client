@@ -39,6 +39,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     // https://mvnrepository.com/artifact/joda-time/joda-time
     compile 'joda-time:joda-time:2.3'
+    compile 'nl.komponents.kovenant:kovenant:3.3.0'
 }
 repositories {
     mavenCentral()

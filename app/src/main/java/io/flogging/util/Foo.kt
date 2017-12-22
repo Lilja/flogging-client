@@ -17,23 +17,23 @@ class Foo {
             var previousEntryDiff = 0
             val mutator = mutableListOf<Pair<Int, FloggingRow>>()
             perDay.map { (_, days) ->
-                for((index, entry) in days.withIndex()) {
+                for ((index, entry) in days.withIndex()) {
                     val listOfHHMM = entry.decimal.split(":")
-                    val hours = (if(listOfHHMM.size==2) listOfHHMM[0].toInt() else entry.decimal.toInt())*60
-                    val minutes = if(listOfHHMM.size==2) listOfHHMM[1].toInt() else 0
+                    val hours = (if (listOfHHMM.size == 2) listOfHHMM[0].toInt() else entry.decimal.toInt()) * 60
+                    val minutes = if (listOfHHMM.size == 2) listOfHHMM[1].toInt() else 0
                     var calc = 0
                     // Only calculate flex
-                    if(entry.status == FloggingRow.Status.WORKED) {
-                        calc = if(!Flogs.isWorkingDay(entry.timestamp)) {
+                    if (entry.status == FloggingRow.Status.WORKED) {
+                        calc = if (!Flogs.isWorkingDay(entry.timestamp)) {
                             // If working on a weekend, we should just add to the difference.
                             (hours + minutes) + previousEntryDiff
-                        } else if(index == 0) {
+                        } else if (index == 0) {
                             // If the current of this is day is the first one we should subtract by hours_per_day
                             (hours + minutes) - (Global.HOURS_PER_DAY * 60) + Global.MINUTES_PER_DAY
                         } else {
                             (hours + minutes) + previousEntryDiff
                         }
-                    } else if(entry.status == FloggingRow.Status.FLEX_TIME_OFF) {
+                    } else if (entry.status == FloggingRow.Status.FLEX_TIME_OFF) {
                         // If using flex. Subtract the used flex.
                         calc = previousEntryDiff - (hours + minutes)
                     }
@@ -44,11 +44,11 @@ class Foo {
             return ArrayList(mutator)
         }
 
-        fun uploadRowsToFirestore(rows: List<Pair<String, FloggingRowFireStore>>, fbRef : CollectionReference) {
-           rows.forEach { (index, flog) ->
+        fun uploadRowsToFirestore(rows: List<Pair<String, FloggingRowFireStore>>, fbRef: CollectionReference) {
+            rows.forEach { (index, flog) ->
                 Log.d("FLOGFS", flog.toString())
                 fbRef.document(index).set(flog)
-            } 
+            }
         }
 
         fun flexMeUp() {
@@ -56,9 +56,9 @@ class Foo {
                     .generateFlogs(10, 90)
                     .map {
                         Pair(Flogs.YYYY_MM_DD_PATTERN.print(it.timestamp) + " " +
-                             Flogs.HH_MM_PATTERN.print(it.startDate) + " " +
-                             Flogs.HH_MM_PATTERN.print(it.endDate),
-                             FloggingRowFireStore(it))
+                                Flogs.HH_MM_PATTERN.print(it.startDate) + " " +
+                                Flogs.HH_MM_PATTERN.print(it.endDate),
+                                FloggingRowFireStore(it))
                     }
 
             val instance = FirebaseFirestore.getInstance()
@@ -70,7 +70,7 @@ class Foo {
                     val fbResult = task.result
 
                     val resultLogs = fbResult.documents.map {
-                        val values = it.data
+                        val values: MutableMap<String, Any> = it.data
                         FloggingRow(
                                 DateTime.parse(values.getOrDefault("timestamp", "").toString(), Flogs.YYYY_MM_DD_PATTERN),
                                 DateTime.parse(values.getOrDefault("startDate", "").toString(), Flogs.HH_MM_PATTERN),

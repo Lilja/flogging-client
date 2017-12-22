@@ -26,9 +26,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when(item?.itemId) {
+        when (item?.itemId) {
             R.id.toolbar_add_log -> {
                 val intent = Intent(applicationContext, NewLog::class.java)
+                startActivity(intent)
+                return true
+            }
+            R.id.toolbar_historic_view -> {
+                val intent = Intent(applicationContext, HistoricView::class.java)
                 startActivity(intent)
                 return true
             }

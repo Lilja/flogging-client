@@ -6,5 +6,11 @@
         <item>Flex time off</item>
         <item>Other</item>
     </string-array>
+
+    <string name="flog_status_type_w">Worked</string>
+    <string name="flog_status_type_pl">Paid leave</string>
+    <string name="flog_status_type_fto">Flex time off</string>
+    <string name="flog_status_type_other">Other</string>
+
     <string name="title_activity_new_log">NewLog</string>
 </resources>

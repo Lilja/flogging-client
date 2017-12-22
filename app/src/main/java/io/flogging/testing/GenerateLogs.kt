@@ -9,7 +9,7 @@ import java.util.*
 
 class GenerateLogs {
     companion object {
-        private fun generateLog(forTimestamp : DateTime): FloggingRow {
+        private fun generateLog(forTimestamp: DateTime): FloggingRow {
             val rnd = Random()
             val str = listOf(
                     "0" + listOf(6, 7, 8)[rnd.nextInt(3)] + ":" + rnd.nextInt(6) + "" + rnd.nextInt(10),
@@ -27,10 +27,10 @@ class GenerateLogs {
             val minutesStr = if (minutes < 9) "0" + minutes else minutes.toString()
 
             return FloggingRow(forTimestamp, startDate, endDate, breakMinutes,
-                    (hoursStr + ":" + minutesStr), FloggingRow.Status.WORKED,"")
+                    (hoursStr + ":" + minutesStr), FloggingRow.Status.WORKED, "")
         }
 
-        fun generateFlogs(count : Int, from : Int): List<FloggingRow> {
+        fun generateFlogs(count: Int, from: Int): List<FloggingRow> {
             var generatedTimestamp = DateTime.now().minusDays(from)
             val output = mutableListOf<FloggingRow>()
             for (i in 1..count) {
