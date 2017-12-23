@@ -1,10 +1,11 @@
-package io.flogging
+package io.flogging.activities
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import com.google.firebase.firestore.FirebaseFirestore
+import io.flogging.R
 import io.flogging.api.Flogging
 import io.flogging.model.FloggingRow
 import io.flogging.util.Flogs

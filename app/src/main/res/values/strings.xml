@@ -13,4 +13,7 @@
     <string name="flog_status_type_other">Other</string>
 
     <string name="title_activity_new_log">NewLog</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

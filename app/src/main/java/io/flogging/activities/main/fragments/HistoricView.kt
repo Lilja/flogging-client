@@ -1,54 +1,53 @@
-package io.flogging
+package io.flogging.activities.main.fragments
 
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
-import android.support.v7.widget.Toolbar
 import android.util.Log
-import android.view.Menu
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import io.flogging.R
+import io.flogging.activities.DetailedLogView
 import io.flogging.api.Flogging
 import io.flogging.model.FloggingRow
 import io.flogging.util.Flogs
 
-class HistoricView : AppCompatActivity() {
+class HistoricView : Fragment() {
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.toolbar_menu, menu)
-        return true
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.historic_view)
-
-        val tb: Toolbar = findViewById(R.id.main_toolbar)
-        setSupportActionBar(tb)
-
+    fun shittyMethod(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        Log.d("HistoricView","OnCreateView called")
+        val root = inflater!!.inflate(R.layout.historic_view, container, false) as LinearLayout
         Flogging.getLogsForProject("funnel", { rows ->
-            findViewById<ProgressBar>(R.id.historic_view_load).visibility = ProgressBar.GONE
-            val ll = findViewById<LinearLayout>(R.id.output)
+            root.findViewById<ProgressBar>(R.id.historic_view_load).visibility = ProgressBar.GONE
+            val ll = root.findViewById<LinearLayout>(R.id.output)
             val logs = Flogging.getLogsWithDiff(rows)
             printRecord(ll, logs)
-            setTotalDiff(findViewById(android.R.id.content), logs)
+            setTotalDiff(root.findViewById(R.id.total_hh_mm_flex_diff), logs)
         })
+        return root
     }
 
-    override fun onRestart() {
-        super.onRestart()
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        Log.d("HistoricView","OnCreateView called")
+        val root = inflater!!.inflate(R.layout.historic_view, container, false) as LinearLayout
         Flogging.getLogsForProject("funnel", { rows ->
-            findViewById<ProgressBar>(R.id.historic_view_load).visibility = ProgressBar.GONE
-            val ll = findViewById<LinearLayout>(R.id.output)
-            ll.removeAllViews()
+            root.findViewById<ProgressBar>(R.id.historic_view_load).visibility = ProgressBar.GONE
+            val ll = root.findViewById<LinearLayout>(R.id.output)
             val logs = Flogging.getLogsWithDiff(rows)
             printRecord(ll, logs)
-            setTotalDiff(findViewById(android.R.id.content), logs)
+            setTotalDiff(root.findViewById(R.id.total_hh_mm_flex_diff), logs)
         })
+        return root
     }
 
     private fun getDiff(minutes: Int): String {
@@ -67,7 +66,7 @@ class HistoricView : AppCompatActivity() {
                 Log.d("PrintRecord", it.second.timestamp.toString())
                 val newLayout = layoutInflater.inflate(R.layout.historic_view_entry, null)
                 newLayout.setOnClickListener {
-                    val intent = Intent(applicationContext, DetailedLogView::class.java)
+                    val intent = Intent(activity, DetailedLogView::class.java)
                     Log.d("PrintRecordOnclick", this.toString())
                     Log.d("PrintRecordOnclick", it.id.toString())
                     Log.d("PrintRecordOnclick", (it.findViewById<TextView>(R.id.selector) as TextView).text.toString())
@@ -87,10 +86,10 @@ class HistoricView : AppCompatActivity() {
 
     private fun setTotalDiff(linearLayout: View,
                              listOfRowWithDecimal: List<Pair<Int, FloggingRow>>) {
-        val text = linearLayout.findViewById<TextView>(R.id.big_meme)
+        val text = linearLayout.findViewById<TextView>(R.id.total_hh_mm_flex_diff)
         val hhmm = getDiff(listOfRowWithDecimal.last().first)
         if ("-" in hhmm) {
-            text.setTextColor(ContextCompat.getColor(this@HistoricView, R.color.red))
+            text.setTextColor(ContextCompat.getColor(activity, R.color.red))
         }
         text.text = hhmm
     }
@@ -131,15 +130,15 @@ class HistoricView : AppCompatActivity() {
         }
         val d = linearLayout.findViewById<ImageView>(R.id.status)
         if (floggingRow.status == FloggingRow.Status.FLEX_TIME_OFF) {
-            d.setBackgroundColor(ContextCompat.getColor(this@HistoricView, R.color.yellow))
+            d.setBackgroundColor(ContextCompat.getColor(activity, R.color.yellow))
         } else if (floggingRow.status == FloggingRow.Status.PAID_LEAVE) {
-            d.setBackgroundColor(ContextCompat.getColor(this@HistoricView, R.color.red))
+            d.setBackgroundColor(ContextCompat.getColor(activity, R.color.red))
         }
 
         val diffText = linearLayout.findViewById<TextView>(R.id.diff_time)
         val res = Flogs.hhMMWithDiff(Flogs.minutesToHHMM(rowWithDecimal.first))
         if ("-" in res) {
-            diffText.setTextColor(ContextCompat.getColor(this@HistoricView, R.color.red))
+            diffText.setTextColor(ContextCompat.getColor(activity, R.color.red))
         }
         diffText.text = res
 

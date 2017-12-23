@@ -10,7 +10,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.main.MainActivity"
             android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -19,11 +19,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".NewLog"
+            android:name=".activities.main.fragments.NewLog"
             android:label="@string/title_activity_new_log"
             android:theme="@style/AppTheme" />
-        <activity android:name=".HistoricView" />
-        <activity android:name=".DetailedLogView"></activity>
+        <activity android:name=".activities.main.fragments.HistoricView" />
+        <activity android:name=".activities.DetailedLogView"></activity>
     </application>
 
 </manifest>
