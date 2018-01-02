@@ -1,6 +1,7 @@
 package io.flogging.util
 
 import android.util.Log
+import io.flogging.model.FloggingProject
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import java.util.*

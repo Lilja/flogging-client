@@ -12,41 +12,56 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.google.firebase.auth.FirebaseAuth
 import io.flogging.R
 import io.flogging.activities.DetailedLogView
 import io.flogging.api.Flogging
 import io.flogging.model.FloggingRow
 import io.flogging.util.Flogs
+import io.flogging.util.Prefs
+import org.joda.time.DateTime
 
-class HistoricView : Fragment() {
+class HistoricView : Observee() {
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-    }
-
-    fun shittyMethod(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        Log.d("HistoricView","OnCreateView called")
-        val root = inflater!!.inflate(R.layout.historic_view, container, false) as LinearLayout
-        Flogging.getLogsForProject("funnel", { rows ->
-            root.findViewById<ProgressBar>(R.id.historic_view_load).visibility = ProgressBar.GONE
-            val ll = root.findViewById<LinearLayout>(R.id.output)
-            val logs = Flogging.getLogsWithDiff(rows)
-            printRecord(ll, logs)
-            setTotalDiff(root.findViewById(R.id.total_hh_mm_flex_diff), logs)
-        })
-        return root
+    override fun onSomethingChanged(projectName : String) {
+        super.onSomethingChanged(projectName)
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d("HistoricView","OnCreateView called")
         val root = inflater!!.inflate(R.layout.historic_view, container, false) as LinearLayout
-        Flogging.getLogsForProject("funnel", { rows ->
-            root.findViewById<ProgressBar>(R.id.historic_view_load).visibility = ProgressBar.GONE
-            val ll = root.findViewById<LinearLayout>(R.id.output)
-            val logs = Flogging.getLogsWithDiff(rows)
-            printRecord(ll, logs)
-            setTotalDiff(root.findViewById(R.id.total_hh_mm_flex_diff), logs)
-        })
+        val prefs = Prefs(activity)
+        val projectName = prefs.activeProject.projectName
+        val uid = FirebaseAuth.getInstance().uid.toString()
+
+        if (projectName.isNotEmpty()) {
+            Flogging.getLogsForProject(prefs.activeProject.projectName, uid, { rows ->
+                Log.d("OnCreateView", "${prefs.activeProject.projectName} $uid")
+                root.findViewById<ProgressBar>(R.id.historic_view_load).visibility = ProgressBar.GONE
+                val ll = root.findViewById<LinearLayout>(R.id.output)
+                val logs = Flogging.getLogsWithDiff(rows)
+                printRecord(ll, logs)
+                setTotalDiff(root.findViewById(R.id.total_hh_mm_flex_diff), logs)
+            })
+        } else {
+            setTotalDiff(root.findViewById(R.id.total_hh_mm_flex_diff), listOf())
+        }
+        val timestamp = DateTime.now()
+        val listener = prefs.configureListener {
+            data ->
+            Log.d("OnPrefsChanged","changed. I was created at ${timestamp.millis}")
+            if (this@HistoricView.isVisible) {
+                Flogging.getLogsForProject(data, uid, { rows ->
+                    root.findViewById<ProgressBar>(R.id.historic_view_load).visibility = ProgressBar.GONE
+                    val ll = root.findViewById<LinearLayout>(R.id.output)
+                    ll.removeAllViews()
+                    val logs = Flogging.getLogsWithDiff(rows)
+                    printRecord(ll, logs)
+                    setTotalDiff(root.findViewById(R.id.total_hh_mm_flex_diff), logs)
+                })
+            }
+        }
+        prefs.registerListener(listener)
         return root
     }
 
@@ -67,8 +82,6 @@ class HistoricView : Fragment() {
                 val newLayout = layoutInflater.inflate(R.layout.historic_view_entry, null)
                 newLayout.setOnClickListener {
                     val intent = Intent(activity, DetailedLogView::class.java)
-                    Log.d("PrintRecordOnclick", this.toString())
-                    Log.d("PrintRecordOnclick", it.id.toString())
                     Log.d("PrintRecordOnclick", (it.findViewById<TextView>(R.id.selector) as TextView).text.toString())
                     intent.putExtra("index",
                             (it.findViewById<TextView>(R.id.selector) as TextView).text)
@@ -87,11 +100,16 @@ class HistoricView : Fragment() {
     private fun setTotalDiff(linearLayout: View,
                              listOfRowWithDecimal: List<Pair<Int, FloggingRow>>) {
         val text = linearLayout.findViewById<TextView>(R.id.total_hh_mm_flex_diff)
-        val hhmm = getDiff(listOfRowWithDecimal.last().first)
-        if ("-" in hhmm) {
-            text.setTextColor(ContextCompat.getColor(activity, R.color.red))
+        if (listOfRowWithDecimal.isNotEmpty()) {
+            val hhmm = getDiff(listOfRowWithDecimal.last().first)
+            if ("-" in hhmm) {
+                text.setTextColor(ContextCompat.getColor(activity, R.color.red))
+            }
+            text.text = hhmm
+        } else {
+            text.text = ""
+
         }
-        text.text = hhmm
     }
 
     private fun populateHeader(linearLayout: LinearLayout,

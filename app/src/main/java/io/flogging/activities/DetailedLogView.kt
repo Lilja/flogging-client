@@ -4,11 +4,13 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import io.flogging.R
 import io.flogging.api.Flogging
 import io.flogging.model.FloggingRow
 import io.flogging.util.Flogs
+import io.flogging.util.Prefs
 import org.joda.time.DateTime
 
 class DetailedLogView : AppCompatActivity() {
@@ -35,7 +37,10 @@ class DetailedLogView : AppCompatActivity() {
             val ts = (findViewById<TextView>(R.id.detailed_log_view_timestamp) as TextView).text.toString()
             val start = (findViewById<TextView>(R.id.detailed_log_view_start) as TextView).text.toString()
             val end = (findViewById<TextView>(R.id.detailed_log_view_end) as TextView).text.toString()
-            Flogging.deleteLogEntry("funnel",ts, start, end, {
+            val prefs = Prefs(this)
+            val uid = FirebaseAuth.getInstance().uid.toString()
+
+            Flogging.deleteLogEntry(prefs.activeProject.projectName, uid, ts, start, end, {
                 finish()
             })
         }

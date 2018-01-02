@@ -4,25 +4,42 @@
     android:layout_height="match_parent"
     tools:context="io.flogging.activities.main.fragments.SummaryView">
 
-    <LinearLayout
-        android:orientation="vertical"
+    <!--
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
+        -->
 
-        <TextView
-            android:id="@+id/summary_view_diff_hh_mm_diff"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:textSize="50sp"
-            android:text="Lol"
-            />
-
-        <com.jjoe64.graphview.GraphView
-            android:id="@+id/summary_graph"
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content">
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/summary_view_diff_hh_mm_diff"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:textSize="50sp"
+                android:layout_gravity="center"
+                android:text="+hh:mm"
+                android:textColor="@color/green"
+                />
+
+            <com.jjoe64.graphview.GraphView
+                android:id="@+id/summary_graph"
+                android:layout_width="match_parent"
+                android:layout_height="300dp" />
+
+            <Button
+                android:id="@+id/summary_delete_project"
+                android:text="Delete project"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+    <!--
+    </ScrollView>
+    -->
 
 </FrameLayout>

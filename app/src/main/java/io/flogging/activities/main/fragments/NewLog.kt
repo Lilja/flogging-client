@@ -13,9 +13,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import com.google.firebase.auth.FirebaseAuth
 import io.flogging.R
 import io.flogging.api.Flogging
 import io.flogging.util.Flogs
+import io.flogging.util.Prefs
 import org.joda.time.DateTime
 import java.util.*
 
@@ -62,11 +64,27 @@ class NewLog : Fragment() {
         root.findViewById<Button>(R.id.new_log_save)
                 .setOnClickListener({
                     Log.d("Button", "Clicked")
+                    val maybeStart = (root.findViewById<EditText>(R.id.new_log_start_time) as EditText).text.toString()
+                    val start = if (maybeStart.isEmpty()) "8:00" else maybeStart
+
+                    val maybeEnd = (root.findViewById<EditText>(R.id.new_log_end_time) as EditText).text.toString()
+                    val end = if (maybeEnd.isEmpty()) "17:00" else maybeEnd
+
+                    val maybeBreak = (root.findViewById<EditText>(R.id.new_log_break_time) as EditText).text
+                    val breakTime = if (maybeBreak.isEmpty()) "60" else maybeBreak.toString()
+
+                    val prefs = Prefs(activity)
+                    val projectName = prefs.activeProject.projectName
+
+                    val uuid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+                    Log.d("NewLog", "$start $end $breakTime")
                     Flogging.createLogEntry(
+                            projectName,
+                            uuid,
                             (root.findViewById<EditText>(R.id.new_log_timestamp) as EditText).text.toString(),
-                            (root.findViewById<EditText>(R.id.new_log_start_time) as EditText).text.toString(),
-                            (root.findViewById<EditText>(R.id.new_log_end_time) as EditText).text.toString(),
-                            (root.findViewById<EditText>(R.id.new_log_break_time) as EditText).text.toString().toInt(),
+                            start,
+                            end,
+                            breakTime.toInt(),
                             (root.findViewById<Spinner>(R.id.new_log_log_type)).selectedItem.toString(),
                             (root.findViewById<EditText>(R.id.new_log_note) as EditText).text.toString(),
                             { success ->

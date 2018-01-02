@@ -11,19 +11,23 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".activities.main.MainActivity"
-            android:theme="@style/AppTheme">
+            android:theme="@style/AppTheme"></activity>
+        <activity android:name=".activities.DetailedLogView" />
+        <activity android:name=".activities.assistant.GetFlexTime">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.APP_BROWSER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".activities.login.Login">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".activities.main.fragments.NewLog"
-            android:label="@string/title_activity_new_log"
-            android:theme="@style/AppTheme" />
-        <activity android:name=".activities.main.fragments.HistoricView" />
-        <activity android:name=".activities.DetailedLogView"></activity>
+        <activity android:name=".activities.project.NewProject"></activity>
     </application>
 
 </manifest>
