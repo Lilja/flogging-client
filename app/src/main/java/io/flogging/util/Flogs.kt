@@ -1,15 +1,14 @@
 package io.flogging.util
 
 import android.util.Log
-import io.flogging.model.FloggingProject
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import java.util.*
 
 class Flogs {
     companion object {
-        val HH_MM_PATTERN = DateTimeFormat.forPattern("HH:mm")
-        val YYYY_MM_DD_PATTERN = DateTimeFormat.forPattern("yyyy-MM-dd")
+        val HH_MM_PATTERN = DateTimeFormat.forPattern("HH:mm")!!
+        val YYYY_MM_DD_PATTERN = DateTimeFormat.forPattern("yyyy-MM-dd")!!
         val HEADER_PATTERN = "E, d MMM y"
 
         fun isWorkingDay(date: DateTime): Boolean {

@@ -1,15 +1,17 @@
 package io.flogging.util
 
 import io.flogging.api.Flogging
+import io.flogging.model.FloggingProject
 import io.flogging.model.FloggingRow
 import org.joda.time.DateTime
 import org.junit.Assert.*
 import org.junit.Test
 
-class FooTest {
+class TestFlogDiff {
 
     @Test
     fun testGeneratedDiff() {
+        val project = FloggingProject("", "8", "0")
         val k = listOf(
                 FloggingRow(
                         DateTime.parse("2017-12-04", Flogs.YYYY_MM_DD_PATTERN),
@@ -39,7 +41,7 @@ class FooTest {
                         ""
                 )
         )
-        val res = Flogging.getLogsWithDiff(k)
+        val res = Flogging.getLogsWithDiff(k, project)
         assertEquals(res[0].first, 30)
         assertEquals(res[1].first, 30)
         assertEquals(res[2].first, -30)
@@ -47,6 +49,7 @@ class FooTest {
 
     @Test
     fun testPaidLeave() {
+        val project = FloggingProject("", "8", "0")
          val k = listOf(
                 FloggingRow(
                         DateTime.parse("2017-12-04", Flogs.YYYY_MM_DD_PATTERN),
@@ -67,13 +70,14 @@ class FooTest {
                         ""
                 )
         )
-        val list = Flogging.getLogsWithDiff(k)
+        val list = Flogging.getLogsWithDiff(k, project)
         assertEquals(list[0].first, -120)
         assertEquals(list[1].first, 0)
     }
 
     @Test
     fun testDiffOnWeekend(){
+        val project = FloggingProject("", "8", "0")
         val k = listOf(
                 FloggingRow(
                         DateTime.parse("2017-11-30", Flogs.YYYY_MM_DD_PATTERN),
@@ -112,7 +116,7 @@ class FooTest {
                         ""
                 )
         )
-        val list = Flogging.getLogsWithDiff(k)
+        val list = Flogging.getLogsWithDiff(k, project)
         assertEquals(list[0].first, 0)
         assertEquals(list[1].first, 0)
         assertEquals(list[2].first, 480)
@@ -121,6 +125,7 @@ class FooTest {
 
     @Test
     fun testFlex() {
+        val project = FloggingProject("", "8", "0")
         val k = listOf(
                 FloggingRow(
                         DateTime.parse("2017-12-04", Flogs.YYYY_MM_DD_PATTERN),
@@ -141,13 +146,14 @@ class FooTest {
                         ""
                 )
         )
-        val list = Flogging.getLogsWithDiff(k)
+        val list = Flogging.getLogsWithDiff(k, project)
         assertEquals(list[0].first, 60)
         assertEquals(list[1].first, -420)
     }
 
     @Test
     fun testMultipleLogsAtSameDay() {
+        val project = FloggingProject("", "8", "0")
         val k = listOf(
                 FloggingRow(
                         DateTime.parse("2017-12-04", Flogs.YYYY_MM_DD_PATTERN),
@@ -177,7 +183,7 @@ class FooTest {
                         ""
                 )
         )
-        val list = Flogging.getLogsWithDiff(k)
+        val list = Flogging.getLogsWithDiff(k, project)
         assertEquals(list[0].first, -240)
         assertEquals(list[1].first, -300)
         assertEquals(list[2].first, 0)
@@ -185,6 +191,7 @@ class FooTest {
 
     @Test
     fun testMultiplelogs() {
+        val project = FloggingProject("", "8", "0")
        val k = listOf(
                 FloggingRow(
                         DateTime.parse("2017-12-04", Flogs.YYYY_MM_DD_PATTERN),
@@ -206,7 +213,7 @@ class FooTest {
                 )
         )
 
-        val list = Flogging.getLogsWithDiff(k)
+        val list = Flogging.getLogsWithDiff(k, project)
         assertEquals(list[0].first, -240)
         assertEquals(list[1].first, 0)
 
@@ -222,7 +229,7 @@ class FooTest {
                 )
         )
 
-        val list2 = Flogging.getLogsWithDiff(doups)
+        val list2 = Flogging.getLogsWithDiff(doups, project)
         assertEquals(list2[0].first, -240)
         assertEquals(list2[1].first, 0)
         assertEquals(list2[2].first, -60)
@@ -230,7 +237,8 @@ class FooTest {
 
     @Test
     fun testMultiplePaidLeave() {
-       val k = listOf(
+        val project = FloggingProject("", "8", "0")
+        val k = listOf(
                 FloggingRow(
                         DateTime.parse("2017-12-04", Flogs.YYYY_MM_DD_PATTERN),
                         DateTime.parse("08:00", Flogs.HH_MM_PATTERN),
@@ -268,7 +276,7 @@ class FooTest {
                         ""
                 )
         )
-        val list = Flogging.getLogsWithDiff(k)
+        val list = Flogging.getLogsWithDiff(k, project)
         assertEquals(list[0].first, -120)
         assertEquals(list[1].first, 0)
         assertEquals(list[2].first, 0)

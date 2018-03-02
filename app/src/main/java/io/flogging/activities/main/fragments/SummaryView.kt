@@ -1,6 +1,7 @@
 package io.flogging.activities.main.fragments
 
 import android.app.AlertDialog
+import android.arch.lifecycle.ViewModelProviders
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
@@ -19,30 +20,36 @@ import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
 import io.flogging.R
+import io.flogging.activities.main.viewmodels.LogViewModel
 import io.flogging.activities.project.NewProject
 import io.flogging.api.Flogging
+import io.flogging.model.FloggingRow
 import io.flogging.util.Flogs
 import io.flogging.util.Prefs
+import io.reactivex.disposables.Disposable
 
 class SummaryView : Fragment() {
+    var vm: LogViewModel? = null
+    var sub: Disposable? = null
+
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d("SummaryView", "OnCreateView")
         val root = inflater!!.inflate(R.layout.fragment_summary_view, container, false) as FrameLayout
-        val pref = Prefs(activity)
-        val listener = pref.configureListener {
-            val btn = root.findViewById<Button>(R.id.summary_delete_project)
-            btn.text = "Delete Project $it"
-            Log.d("SummaryView", "Am i visible?" + this@SummaryView.isVisible)
+        vm = ViewModelProviders.of(activity).get(LogViewModel::class.java)
+        sub = vm!!.logs.subscribe {
             if (this@SummaryView.isVisible) {
-                setupGraph(root)
+                setupGraph(root, it)
                 setupBtn(root)
             }
         }
-        Log.d("SummaryView", "Registered callback")
-        pref.registerListener(listener)
-        setupGraph(root)
-        setupBtn(root)
         return root
+    }
+
+    override fun onPause() {
+        if (sub!=null) {
+            sub!!.dispose()
+        }
+        super.onPause()
     }
 
     private fun setupBtn(root: FrameLayout) {
@@ -52,8 +59,6 @@ class SummaryView : Fragment() {
         btn.text = "Delete project $proj"
         btn.setOnClickListener {
             val alert = AlertDialog.Builder(activity).create()
-            val pref = Prefs(activity)
-            val proj = pref.activeProject.projectName
             val uid = FirebaseAuth.getInstance().uid.toString()
             alert.setTitle("Delete a project")
             alert.setMessage("Are you REALLY sure you want to delete the project $proj")
@@ -78,7 +83,7 @@ class SummaryView : Fragment() {
         }
     }
 
-    private fun setupGraph(root: FrameLayout) {
+    private fun setupGraph(root: FrameLayout, logs : List<FloggingRow>) {
         val prefs = Prefs(activity)
 
         val uid = FirebaseAuth.getInstance().uid.toString()
@@ -87,24 +92,22 @@ class SummaryView : Fragment() {
         Log.d("SummaryView", "Getting project name: $projName")
 
         if (projName.isNotEmpty()) {
-            Flogging.getLogsForProject(projName, uid, { logs ->
-                val rows = Flogging.getLogsWithDiff(logs)
-                if (rows.isNotEmpty()) {
-                    setupTotalHHMM(root, rows.last().first)
+            val rows = vm!!.getLogsWithDiff(logs, prefs.activeProject)
+            if (rows.isNotEmpty()) {
+                setupTotalHHMM(root, rows.last().first)
 
-                    val graph = root.findViewById<GraphView>(R.id.summary_graph)
+                val graph = root.findViewById<GraphView>(R.id.summary_graph)
 
-                    val series = LineGraphSeries(
-                            rows.map {
-                                DataPoint(it.second.timestamp.millis.toDouble(), it.first.toDouble())
-                            }.toTypedArray()
-                    )
-                    graph.addSeries(series)
-                    graph.gridLabelRenderer.labelFormatter = (DateAsXAxisLabelFormatter(activity))
-                } else {
-                    setupTotalHHMM(root, 0)
-                }
-            })
+                val series = LineGraphSeries(
+                        rows.map {
+                            DataPoint(it.second.timestamp.millis.toDouble(), it.first.toDouble())
+                        }.toTypedArray()
+                )
+                graph.addSeries(series)
+                graph.gridLabelRenderer.labelFormatter = (DateAsXAxisLabelFormatter(activity))
+            } else {
+                setupTotalHHMM(root, 0)
+            }
         }
     }
 

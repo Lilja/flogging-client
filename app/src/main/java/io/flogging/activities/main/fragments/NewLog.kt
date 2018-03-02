@@ -2,9 +2,9 @@ package io.flogging.activities.main.fragments
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
-import android.support.design.widget.CoordinatorLayout
 import android.support.v4.app.Fragment
 import android.text.Editable
 import android.text.TextWatcher
@@ -15,21 +15,36 @@ import android.view.ViewGroup
 import android.widget.*
 import com.google.firebase.auth.FirebaseAuth
 import io.flogging.R
+import io.flogging.activities.main.viewmodels.LogViewModel
 import io.flogging.api.Flogging
+import io.flogging.model.FloggingRow
 import io.flogging.util.Flogs
 import io.flogging.util.Prefs
+import io.reactivex.disposables.Disposable
 import org.joda.time.DateTime
 import java.util.*
 
 class NewLog : Fragment() {
 
+    var vm: LogViewModel? = null
+    var sub: Disposable? = null
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val root = inflater!!.inflate(R.layout.activity_new_log, container, false) as ConstraintLayout
-        setDefaults(root)
-        initLayout(root)
-        return root
 
+        vm = ViewModelProviders.of(activity).get(LogViewModel::class.java)
+        sub = vm!!.logs.subscribe {
+            setDefaults(root)
+            initLayout(root, it, vm!!)
+        }
+        return root
+    }
+
+    override fun onPause() {
+        if (sub != null) {
+            sub!!.dispose()
+        }
+        super.onPause()
     }
 
     fun textChanged(p0: Editable?) {
@@ -60,7 +75,7 @@ class NewLog : Fragment() {
                 })
     }
 
-    private fun initLayout(root: ConstraintLayout) {
+    private fun initLayout(root: ConstraintLayout, logs: List<FloggingRow>, viewModel: LogViewModel) {
         root.findViewById<Button>(R.id.new_log_save)
                 .setOnClickListener({
                     Log.d("Button", "Clicked")
@@ -78,7 +93,7 @@ class NewLog : Fragment() {
 
                     val uuid = FirebaseAuth.getInstance().currentUser?.uid.toString()
                     Log.d("NewLog", "$start $end $breakTime")
-                    Flogging.createLogEntry(
+                    viewModel.add_log(
                             projectName,
                             uuid,
                             (root.findViewById<EditText>(R.id.new_log_timestamp) as EditText).text.toString(),
@@ -87,8 +102,15 @@ class NewLog : Fragment() {
                             breakTime.toInt(),
                             (root.findViewById<Spinner>(R.id.new_log_log_type)).selectedItem.toString(),
                             (root.findViewById<EditText>(R.id.new_log_note) as EditText).text.toString(),
-                            { success ->
+                            { success : Boolean, message : String->
                                 Log.d("FirebasePost", "Saved?" + success)
+
+                                if(success) {
+                                    Toast.makeText(activity, "Successfully created!", Toast.LENGTH_LONG).show()
+                                } else {
+                                    Toast.makeText(activity, "Failed: " + message, Toast.LENGTH_LONG).show()
+                                }
+
                             }
                     )
                 })
@@ -100,8 +122,10 @@ class NewLog : Fragment() {
                                          month: Int,
                                          day: Int ->
 
+                val zeroedMonth = if((month+1)<10) "0"+(month+1) else month.toString()
+                val zeroedDay = if(day<10) "0"+day else day.toString()
                 root.findViewById<EditText>(R.id.new_log_timestamp)
-                        .setText(year.toString() + "-" + (month + 1).toString() + "-" + day.toString(),
+                        .setText(year.toString() + "-" + zeroedMonth + "-" + zeroedDay,
                                 TextView.BufferType.EDITABLE)
 
             }, c.get(Calendar.YEAR),
@@ -113,8 +137,8 @@ class NewLog : Fragment() {
             TimePickerDialog(activity, { _: TimePicker,
                                          i: Int,
                                          i1: Int ->
-                val leadingZeroHour = if (i < 9) "0$i" else i.toString()
-                val leadingZeroMinute = if (i1 < 9) "0$i1" else i1.toString()
+                val leadingZeroHour = if (i < 10) "0$i" else i.toString()
+                val leadingZeroMinute = if (i1 < 10) "0$i1" else i1.toString()
                 root.findViewById<EditText>(R.id.new_log_start_time)
                         .setText(leadingZeroHour + ":" + leadingZeroMinute, TextView.BufferType.EDITABLE)
                 decimalCalc(root)
@@ -126,8 +150,8 @@ class NewLog : Fragment() {
             TimePickerDialog(activity, { _: TimePicker,
                                          i: Int,
                                          i1: Int ->
-                val leadingZeroHour = if (i < 9) "0$i" else i.toString()
-                val leadingZeroMinute = if (i1 < 9) "0$i1" else i1.toString()
+                val leadingZeroHour = if (i < 10) "0$i" else i.toString()
+                val leadingZeroMinute = if (i1 < 10) "0$i1" else i1.toString()
                 root.findViewById<EditText>(R.id.new_log_end_time)
                         .setText(leadingZeroHour + ":" + leadingZeroMinute, TextView.BufferType.EDITABLE)
                 decimalCalc(root)

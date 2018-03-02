@@ -1,93 +1,48 @@
 package io.flogging.api
 
 import android.util.Log
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import io.flogging.model.FloggingRow
 import io.flogging.model.FloggingRowFireStore
 import io.flogging.model.FloggingProject
 import io.flogging.util.Flogs
-import io.flogging.util.Global
 import org.joda.time.DateTime
 import org.joda.time.Minutes
+import org.joda.time.format.DateTimeFormat
 
 class Flogging {
 
     companion object {
-        fun getLogsWithDiff(rows: List<FloggingRow>): List<Pair<Int, FloggingRow>> {
-            val perDay = rows
-                    .sortedWith(compareBy(FloggingRow::timestamp))
-                    .groupBy { it.timestamp.toString("MM-dd") }
-            var previousEntryDiff = 0
-            val mutator = mutableListOf<Pair<Int, FloggingRow>>()
-            perDay.map { (_, days) ->
-                var todaysDiff = previousEntryDiff
-                var hasSubtractedWithDailyLimit = false
-                val otherMinutes = days.filter { it.status == FloggingRow.Status.OTHER }
-                        .sumBy {
-                            val listOfHHMM = it.decimal.split(":")
-                            val hours = (if (listOfHHMM.size == 2) listOfHHMM[0].toInt() else it.decimal.toInt()) * 60
-                            val minutes = if (listOfHHMM.size == 2) listOfHHMM[1].toInt() else 0
-                            hours + minutes
-                        }
-                for ((_, entry) in days.withIndex()) {
-                    val listOfHHMM = entry.decimal.split(":")
-                    val hours = (if (listOfHHMM.size == 2) listOfHHMM[0].toInt() else entry.decimal.toInt()) * 60
-                    val minutes = if (listOfHHMM.size == 2) listOfHHMM[1].toInt() else 0
-                    var calc = 0
-                    // Only calculate flex
-                    if (entry.status == FloggingRow.Status.WORKED) {
-                        calc = if (!Flogs.isWorkingDay(entry.timestamp)) {
-                            // If working on a weekend, we should just add to the difference.
-                            (hours + minutes) + previousEntryDiff
-                        } else if (!hasSubtractedWithDailyLimit) {
-                            // If the current of this is day is the first one we should subtract by hours_per_day
-                            hasSubtractedWithDailyLimit = true
-                            if (otherMinutes > 0) {
-                                todaysDiff = ((hours + minutes) - (((Global.HOURS_PER_DAY * 60) + Global.MINUTES_PER_DAY) - otherMinutes)) + previousEntryDiff
-                            } else {
-                                todaysDiff = ((hours + minutes) - (Global.HOURS_PER_DAY * 60) + Global.MINUTES_PER_DAY) + previousEntryDiff
-                            }
-                            todaysDiff
-                        } else {
-                            (hours + minutes) + todaysDiff
-                        }
-                    } else if (entry.status == FloggingRow.Status.FLEX_TIME_OFF) {
-                        calc = previousEntryDiff - (hours + minutes)
-                    } else if (entry.status == FloggingRow.Status.OTHER) {
-                        calc = previousEntryDiff
-                    }
-                    previousEntryDiff = calc
-                    mutator.add(Pair(calc, entry))
-                }
-            }
-            return ArrayList(mutator)
+        val HH_MM_PATTERN = DateTimeFormat.forPattern("HH:mm")
+        val YYYY_MM_DD_PATTERN = DateTimeFormat.forPattern("yyyy-MM-dd")
+        val HEADER_PATTERN = "E, d MMM y"
+
+        fun <T> List<T>.sliding(windowSize: Int): List<List<T>> {
+            return this.dropLast(windowSize - 1).mapIndexed { i, s -> this.subList(i, i + windowSize) }
         }
 
-        fun indicateMissingLogEntries(list: List<FloggingRow>): List<String> {
-            val copy = list.filter { Flogs.isWorkingDay(it.timestamp) }
-            val groupedPerDay = copy.groupBy {
-                it.timestamp.toString("dd")
+        fun indicateMissingLogEntries(list: List<FloggingRow>, end: DateTime): List<FloggingRow> {
+            fun missingDates(log1: FloggingRow, log2: FloggingRow) {
             }
 
-            var lastEntry: FloggingRow = copy[0]
-            var firstRun = false
+            val groupedPerDay = list
+                    .filter { Flogs.isWorkingDay(it.timestamp) }
+                    .sortedBy { it.timestamp.millis }
+                    .groupBy { it.timestamp.toString("dd") }
 
-            val listOfMissingDates = mutableListOf<String>()
+            val hehe = groupedPerDay
+                    .map { it.value.first() }
+                    .sliding(2)
+            hehe.forEach {
+                it.first()
+            }
+
+            // [ 01, 01, 02, 03, 05]
+            // [ [01, 01], [02], [03], [05]]
             for ((_, listOfDay) in groupedPerDay) {
-                if (firstRun) {
-                    firstRun = false
-                } else {
-                    val day = listOfDay[0]
-                    if (!Flogs.isToday(lastEntry.timestamp.plusDays(1), day.timestamp)) {
-                        lastEntry = day
-                    } else {
-                        listOfMissingDates.add(lastEntry.timestamp.plusDays(1).toString("yyyy-MM-dd"))
-                    }
 
-                }
             }
-            return ArrayList(listOfMissingDates).toList()
+            return listOf()
         }
 
         fun calculateDiff(startTime: String, endTime: String, breakMinutes: Int): Int {
@@ -165,7 +120,7 @@ class Flogging {
                     }
         }
 
-        private fun firebaseRowToFloggingRow(values: MutableMap<String, Any>): FloggingRow {
+        public fun firebaseRowToFloggingRow(values: MutableMap<String, Any>): FloggingRow {
             return FloggingRow(
                     DateTime.parse(values.getOrDefault("timestamp", "").toString(), Flogs.YYYY_MM_DD_PATTERN),
                     DateTime.parse(values.getOrDefault("startDate", "").toString(), Flogs.HH_MM_PATTERN),
@@ -185,6 +140,23 @@ class Flogging {
             )
         }
 
+        fun createLogEntryFromObject(projectName: String,
+                                     uuid: String,
+                                     log: FloggingRow,
+                                     success: (status: Boolean, reason: String) -> Unit) {
+            createLogEntry(
+                    projectName,
+                    uuid,
+                    log.timestamp.toString(YYYY_MM_DD_PATTERN),
+                    log.startDate.toString(HH_MM_PATTERN),
+                    log.endDate.toString(HH_MM_PATTERN),
+                    log.breakMinutes,
+                    log.status.toString(),
+                    log.note,
+                    success
+            )
+        }
+
         fun createLogEntry(projectName: String,
                            uuid: String,
                            timestamp: String,
@@ -193,7 +165,8 @@ class Flogging {
                            breakMinutes: Int,
                            typeOfLog: String,
                            note: String,
-                           success: (status: Boolean) -> Unit) {
+                           success: (status: Boolean, reason: String) -> Unit) {
+            Log.d("Creating log", projectName + " " + timestamp)
             val d1 = DateTime.parse(startTime, Flogs.HH_MM_PATTERN)
             val d2 = DateTime.parse(endTime, Flogs.HH_MM_PATTERN)
             if (d2.millis < d1.millis)
@@ -207,13 +180,33 @@ class Flogging {
 
             val instance = FirebaseFirestore.getInstance()
             instance
-                    .document("/users/$uuid/projects/$projectName/timestamps/$index")
-                    .set(obj)
-                    .addOnSuccessListener {
-                        success(true)
+                    .collection("/users/$uuid/projects/$projectName/timestamps")
+                    .whereEqualTo("timestamp", timestamp)
+                    .get()
+                    .addOnSuccessListener { querySnapshot ->
+                        val k = querySnapshot.documents.map {
+                            firebaseRowToFloggingRow(it.data)
+                        }.map {
+                            val start1 = it.startDate
+                            val start2 = it.endDate
+                            (start1 <= d2) and (d1 <= start2)
+                        }.contains(true)
+
+                        if (k) {
+                            success(false,
+                                    "The log intersected on something that has already been created")
+                        } else {
+                            instance
+                                    .document("/users/$uuid/projects/$projectName/timestamps/$index")
+                                    .set(obj)
+                                    .addOnCompleteListener {
+                                        success(it.isSuccessful, "")
+                                    }
+
+                        }
                     }
                     .addOnFailureListener {
-                        success(false)
+                        success(false, "Log already exists")
                     }
         }
 
@@ -223,6 +216,7 @@ class Flogging {
                            startTime: String,
                            endTime: String,
                            succeeded: (status: Boolean) -> Unit) {
+            /*
             val instance = FirebaseFirestore.getInstance()
             val index = createIndex(timesToFloggingRow(timestamp, startTime, endTime))
             instance.document("/users/$uid/projects/$projectName/timestamps/$index")
@@ -233,18 +227,20 @@ class Flogging {
                     .addOnFailureListener {
                         succeeded(false)
                     }
+                    */
         }
 
         fun deleteProject(projectName: String,
                           uid: String,
                           succeeded: (status: Boolean) -> Unit) {
+            /*
             val instance = FirebaseFirestore.getInstance()
             instance.document("/users/$uid/projects/$projectName")
                     .delete()
-                    .addOnCompleteListener {
-                        succeed ->
+                    .addOnCompleteListener { succeed ->
                         succeeded(succeed.isSuccessful)
                     }
+                    */
         }
 
         private fun timesToFloggingRow(timestamp: String, startTime: String, endTime: String): FloggingRow {
@@ -268,12 +264,34 @@ class Flogging {
                     .get()
                     .addOnCompleteListener { task ->
                         val results = task.result
+                        Log.d("GetLogsForProject", results.toString())
                         val records = results.documents.map {
                             firebaseRowToFloggingRow(it.data)
                         }
+
+                        Log.d("GetLogsForProject", records.map { it.timestamp }.toString())
                         callback(records)
                     }
 
+        }
+
+        fun initUser(uuid: String, name: String, callback: (success: Boolean) -> Unit) {
+            val instance = FirebaseFirestore.getInstance()
+            instance.document("users/$uuid")
+                    .get()
+                    .addOnCompleteListener { docSnapshot ->
+                        if (!docSnapshot.result.exists()) {
+                            val map = hashMapOf<String, Any>(
+                                    "name" to name,
+                                    "uuid" to uuid
+                            )
+                            instance.document("users/$uuid")
+                                    .set(map)
+                                    .addOnCompleteListener {
+                                        callback(it.isSuccessful)
+                                    }
+                        }
+                    }
         }
     }
 

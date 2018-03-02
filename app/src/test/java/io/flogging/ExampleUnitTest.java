@@ -2,6 +2,8 @@ package io.flogging;
 
 import org.junit.Test;
 
+import io.flogging.model.FloggingRow;
+
 import static org.junit.Assert.*;
 
 /**

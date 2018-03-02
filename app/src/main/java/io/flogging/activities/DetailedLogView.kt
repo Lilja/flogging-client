@@ -2,6 +2,7 @@ package io.flogging.activities
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import com.google.firebase.auth.FirebaseAuth
@@ -18,8 +19,10 @@ class DetailedLogView : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detailed_log_view)
+        val prefs = Prefs(this)
         val k = intent.getStringExtra("index")
-        initView(k)
+        val user = FirebaseAuth.getInstance().currentUser!!.uid
+        initView(k, prefs.activeProject.projectName, user)
     }
 
     private fun initMate(log: FloggingRow) {
@@ -47,9 +50,10 @@ class DetailedLogView : AppCompatActivity() {
 
     }
 
-    private fun initView(index: String) {
+    private fun initView(index: String, project_name : String, uid: String) {
+        Log.d("InitViewGetLog", index)
         val instance = FirebaseFirestore.getInstance()
-        instance.document("projects/funnel/timestamps/$index")
+        instance.document("users/$uid/projects/$project_name/timestamps/$index")
                 .get()
                 .addOnSuccessListener { task ->
                     val values: MutableMap<String, Any> = task.data
