@@ -15,9 +15,8 @@ import android.view.animation.Transformation
 import android.widget.*
 import com.google.firebase.auth.FirebaseAuth
 import io.flogging.R
-import io.flogging.activities.DetailedLogView
+import io.flogging.activities.logdetail.DetailedLogView
 import io.flogging.activities.main.viewmodels.LogViewModel
-import io.flogging.api.Flogging
 import io.flogging.model.FloggingRow
 import io.flogging.util.Flogs
 import io.flogging.util.Prefs

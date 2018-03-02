@@ -1,4 +1,4 @@
-package io.flogging.activities
+package io.flogging.activities.logdetail
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle

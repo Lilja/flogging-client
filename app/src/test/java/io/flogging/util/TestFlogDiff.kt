@@ -1,6 +1,6 @@
 package io.flogging.util
 
-import io.flogging.api.Flogging
+import io.flogging.activities.main.viewmodels.LogViewModel
 import io.flogging.model.FloggingProject
 import io.flogging.model.FloggingRow
 import org.joda.time.DateTime
@@ -8,6 +8,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class TestFlogDiff {
+    val vm = LogViewModel()
 
     @Test
     fun testGeneratedDiff() {
@@ -41,7 +42,7 @@ class TestFlogDiff {
                         ""
                 )
         )
-        val res = Flogging.getLogsWithDiff(k, project)
+        val res = vm.getLogsWithDiff(k, project)
         assertEquals(res[0].first, 30)
         assertEquals(res[1].first, 30)
         assertEquals(res[2].first, -30)
@@ -70,7 +71,7 @@ class TestFlogDiff {
                         ""
                 )
         )
-        val list = Flogging.getLogsWithDiff(k, project)
+        val list = vm.getLogsWithDiff(k, project)
         assertEquals(list[0].first, -120)
         assertEquals(list[1].first, 0)
     }
@@ -116,7 +117,7 @@ class TestFlogDiff {
                         ""
                 )
         )
-        val list = Flogging.getLogsWithDiff(k, project)
+        val list = vm.getLogsWithDiff(k, project)
         assertEquals(list[0].first, 0)
         assertEquals(list[1].first, 0)
         assertEquals(list[2].first, 480)
@@ -146,7 +147,7 @@ class TestFlogDiff {
                         ""
                 )
         )
-        val list = Flogging.getLogsWithDiff(k, project)
+        val list = vm.getLogsWithDiff(k, project)
         assertEquals(list[0].first, 60)
         assertEquals(list[1].first, -420)
     }
@@ -183,7 +184,7 @@ class TestFlogDiff {
                         ""
                 )
         )
-        val list = Flogging.getLogsWithDiff(k, project)
+        val list = vm.getLogsWithDiff(k, project)
         assertEquals(list[0].first, -240)
         assertEquals(list[1].first, -300)
         assertEquals(list[2].first, 0)
@@ -213,7 +214,7 @@ class TestFlogDiff {
                 )
         )
 
-        val list = Flogging.getLogsWithDiff(k, project)
+        val list = vm.getLogsWithDiff(k, project)
         assertEquals(list[0].first, -240)
         assertEquals(list[1].first, 0)
 
@@ -229,7 +230,7 @@ class TestFlogDiff {
                 )
         )
 
-        val list2 = Flogging.getLogsWithDiff(doups, project)
+        val list2 = vm.getLogsWithDiff(doups, project)
         assertEquals(list2[0].first, -240)
         assertEquals(list2[1].first, 0)
         assertEquals(list2[2].first, -60)
@@ -276,7 +277,7 @@ class TestFlogDiff {
                         ""
                 )
         )
-        val list = Flogging.getLogsWithDiff(k, project)
+        val list = vm.getLogsWithDiff(k, project)
         assertEquals(list[0].first, -120)
         assertEquals(list[1].first, 0)
         assertEquals(list[2].first, 0)
