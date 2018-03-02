@@ -4,7 +4,7 @@ The successor of [timelog](github.com/lilja/timelog) is here. Now on android.
 
 
 # Stack
-Kotlin, RxKotlin, Cloud Firestore
+Kotlin, RxKotlin, Cloud Firestore, Android Architecture(ViewModel)
 
 ## Build it yourself
 
