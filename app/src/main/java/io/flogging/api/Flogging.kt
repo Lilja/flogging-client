@@ -216,31 +216,24 @@ class Flogging {
                            startTime: String,
                            endTime: String,
                            succeeded: (status: Boolean) -> Unit) {
-            /*
             val instance = FirebaseFirestore.getInstance()
             val index = createIndex(timesToFloggingRow(timestamp, startTime, endTime))
             instance.document("/users/$uid/projects/$projectName/timestamps/$index")
                     .delete()
-                    .addOnSuccessListener {
-                        succeeded(true)
+                    .addOnCompleteListener {
+                        succeeded(it.isSuccessful)
                     }
-                    .addOnFailureListener {
-                        succeeded(false)
-                    }
-                    */
         }
 
         fun deleteProject(projectName: String,
                           uid: String,
                           succeeded: (status: Boolean) -> Unit) {
-            /*
             val instance = FirebaseFirestore.getInstance()
             instance.document("/users/$uid/projects/$projectName")
                     .delete()
                     .addOnCompleteListener { succeed ->
                         succeeded(succeed.isSuccessful)
                     }
-                    */
         }
 
         private fun timesToFloggingRow(timestamp: String, startTime: String, endTime: String): FloggingRow {
