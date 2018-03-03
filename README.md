@@ -1,6 +1,6 @@
 # Flogging-mobile
 
-The successor of [timelog](github.com/lilja/timelog) is here. Now on android.
+The successor of [timelog](https://github.com/Lilja/timelog) is here. Now on android.
 
 
 # Stack
