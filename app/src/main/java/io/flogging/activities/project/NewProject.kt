@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.*
 import com.google.firebase.auth.FirebaseAuth
 import io.flogging.R
+import io.flogging.activities.activityrequests.ActivityRequestCodes
 import io.flogging.api.Flogging
 import io.flogging.model.FloggingProject
 import io.flogging.util.Prefs
@@ -50,10 +51,12 @@ class NewProject : AppCompatActivity() {
                             Log.d("NewProjectSave", "Success")
                             val p = Prefs(this)
                             p.activeProject = FloggingProject(projName, dhm[0], dhm[1])
-                            finish()
+                            setResult(ActivityRequestCodes.NEW_LOG_PROJECT_SUCCESS)
                         } else {
-                            Log.d("NewProjectSave", "Fail Success")
+                            Log.d("NewProjectSave", "Fail")
+                            setResult(ActivityRequestCodes.NEW_LOG_PROJECT_FAILURE)
                         }
+                        finish()
 
                     }
             )

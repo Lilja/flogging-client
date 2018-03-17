@@ -10,6 +10,7 @@ import org.joda.time.DateTime
 
 class LogViewModel : ViewModel() {
     val logs: BehaviorSubject<List<FloggingRow>> = BehaviorSubject.create()
+    val projects: BehaviorSubject<List<FloggingProject>> = BehaviorSubject.create()
     var uuid: String? = null
     var displayName: String? = null
 
@@ -67,7 +68,7 @@ class LogViewModel : ViewModel() {
         return ArrayList(mutator)
     }
 
-    fun load_logs_for_project(projectName: String, uuid: String) {
+    fun loadLogsForProject(projectName: String, uuid: String) {
         Flogging.getLogsForProject(
                 projectName,
                 uuid,
@@ -78,7 +79,7 @@ class LogViewModel : ViewModel() {
     }
 
     fun set_project_name(projectName: String, uuid: String) {
-        load_logs_for_project(projectName, uuid)
+        loadLogsForProject(projectName, uuid)
     }
 
     fun create_log_from_properties(timestamp: String,
@@ -109,7 +110,7 @@ class LogViewModel : ViewModel() {
                 success: (b: Boolean, s: String) -> Unit) {
         Flogging.createLogEntryFromObject(projectName, uid, log, { b: Boolean, s: String ->
             if (b) {
-                load_logs_for_project(projectName, uid)
+                loadLogsForProject(projectName, uid)
                 success(b, s)
             }
         })
@@ -137,7 +138,7 @@ class LogViewModel : ViewModel() {
 
         Flogging.createLogEntryFromObject(projectName, uid, log, { b: Boolean, s: String ->
             if (b) {
-                load_logs_for_project(projectName, uid)
+                loadLogsForProject(projectName, uid)
             }
             success(b, s)
         })
@@ -146,4 +147,11 @@ class LogViewModel : ViewModel() {
     fun omitCurrentLogs() {
         logs.onNext(logs.value)
     }
+
+    fun loadProjects(user : String) {
+        Flogging.getProjectsFromUser(user, {
+            projects.onNext(it)
+        })
+    }
+
 }

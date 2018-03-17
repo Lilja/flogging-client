@@ -2,7 +2,6 @@ package io.flogging.activities.main.fragments
 
 import android.app.AlertDialog
 import android.arch.lifecycle.ViewModelProviders
-import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
@@ -14,7 +13,6 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.jjoe64.graphview.GraphView
 import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter
 import com.jjoe64.graphview.series.DataPoint
@@ -92,7 +90,7 @@ class SummaryView : Fragment() {
         Log.d("SummaryView", "Getting project name: $projName")
 
         if (projName.isNotEmpty()) {
-            val rows = vm!!.getLogsWithDiff(logs, prefs.activeProject)
+            val rows: List<Pair<Int, FloggingRow>> = vm!!.getLogsWithDiff(logs, prefs.activeProject)
             if (rows.isNotEmpty()) {
                 setupTotalHHMM(root, rows.last().first)
 
@@ -107,16 +105,21 @@ class SummaryView : Fragment() {
                 graph.gridLabelRenderer.labelFormatter = (DateAsXAxisLabelFormatter(activity))
             } else {
                 setupTotalHHMM(root, 0)
+                val graph = root.findViewById<GraphView>(R.id.summary_graph)
+                graph.removeAllSeries()
             }
         }
     }
 
     private fun setupTotalHHMM(root: FrameLayout, decimal: Int) {
+        Log.d("SetupTotalHHMM", "Decimal: $decimal")
         val tv = root.findViewById<TextView>(R.id.summary_view_diff_hh_mm_diff)
         if (decimal < 0)
             tv.setTextColor(resources.getColor(R.color.red))
         if (decimal == 0)
             tv.setTextColor(resources.getColor(R.color.black))
+        if (decimal > 0)
+            tv.setTextColor(resources.getColor(R.color.green))
 
         tv.text = Flogs.hhMMWithDiff(Flogs.minutesToHHMM(decimal))
     }

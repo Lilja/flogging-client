@@ -12,6 +12,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.Animation
+import android.view.animation.Transformation
 import android.widget.*
 import com.google.firebase.auth.FirebaseAuth
 import io.flogging.R
@@ -29,9 +31,12 @@ class NewLog : Fragment() {
     var vm: LogViewModel? = null
     var sub: Disposable? = null
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater?,
+                              container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
         val root = inflater!!.inflate(R.layout.activity_new_log, container, false) as ConstraintLayout
 
+        initFeedbackView(root)
         vm = ViewModelProviders.of(activity).get(LogViewModel::class.java)
         sub = vm!!.logs.subscribe {
             setDefaults(root)
@@ -79,6 +84,9 @@ class NewLog : Fragment() {
         root.findViewById<Button>(R.id.new_log_save)
                 .setOnClickListener({
                     Log.d("Button", "Clicked")
+                    Log.d("Button", "Hiding feedback if possible")
+                    hideFeedback(root)
+
                     val maybeStart = (root.findViewById<EditText>(R.id.new_log_start_time) as EditText).text.toString()
                     val start = if (maybeStart.isEmpty()) "8:00" else maybeStart
 
@@ -102,35 +110,40 @@ class NewLog : Fragment() {
                             breakTime.toInt(),
                             (root.findViewById<Spinner>(R.id.new_log_log_type)).selectedItem.toString(),
                             (root.findViewById<EditText>(R.id.new_log_note) as EditText).text.toString(),
-                            { success : Boolean, message : String->
+                            { success: Boolean, message: String ->
                                 Log.d("FirebasePost", "Saved?" + success)
 
-                                if(success) {
-                                    Toast.makeText(activity, "Successfully created!", Toast.LENGTH_LONG).show()
+                                if (success) {
+                                    setPositiveFeedback(root, "Successfully created")
                                 } else {
-                                    Toast.makeText(activity, "Failed: " + message, Toast.LENGTH_LONG).show()
+                                    setNegativeFeedback(root, "Failed: " + message)
                                 }
-
+                                showFeedback(root)
                             }
                     )
                 })
 
         root.findViewById<Button>(R.id.new_log_pick_timestamp).setOnClickListener({
             val c = Calendar.getInstance()
+            val etText = root.findViewById<EditText>(R.id.new_log_timestamp).text.toString()
+            val etTextHasText = !etText.isEmpty()
+
+            val dpYear = if(etTextHasText) etText.split("-")[0].toInt() else c.get(Calendar.YEAR)
+            val dpMonth = (if(etTextHasText) etText.split("-")[1].toInt() else c.get(Calendar.MONTH))-1
+            val dpDay = if (etTextHasText) etText.split("-")[2].toInt() else c.get(Calendar.DAY_OF_MONTH)
+
             DatePickerDialog(activity, { _: DatePicker,
                                          year: Int,
                                          month: Int,
                                          day: Int ->
 
-                val zeroedMonth = if((month+1)<10) "0"+(month+1) else month.toString()
-                val zeroedDay = if(day<10) "0"+day else day.toString()
+                val zeroedMonth = if ((month + 1) < 10) "0" + (month + 1) else month.toString()
+                val zeroedDay = if (day < 10) "0" + day else day.toString()
                 root.findViewById<EditText>(R.id.new_log_timestamp)
                         .setText(year.toString() + "-" + zeroedMonth + "-" + zeroedDay,
                                 TextView.BufferType.EDITABLE)
 
-            }, c.get(Calendar.YEAR),
-                    c.get(Calendar.MONTH),
-                    c.get(Calendar.DAY_OF_MONTH)).show()
+            }, dpYear, dpMonth, dpDay).show()
         })
 
         root.findViewById<Button>(R.id.new_log_pick_start_time).setOnClickListener({
@@ -180,4 +193,67 @@ class NewLog : Fragment() {
         (root.findViewById<TextView>(R.id.new_log_output) as TextView).text =
                 Flogs.minutesToHHMM(diff)
     }
+
+    private fun setFeedback(root: ConstraintLayout, color: Int, feedbackText: String) {
+        val tv = root.findViewById<TextView>(R.id.new_log_feedback_text)
+        tv.setBackgroundColor(color)
+        tv.text = feedbackText
+    }
+
+    private fun initFeedbackView(root: ConstraintLayout) {
+        val tv = getFeedbackElement(root).first
+        tv.setOnClickListener {
+            hideFeedback(root)
+        }
+    }
+
+    private fun setNegativeFeedback(root: ConstraintLayout, feedbackText: String) {
+        setFeedback(root, resources.getColor(R.color.red), feedbackText)
+    }
+
+    private fun setPositiveFeedback(root: ConstraintLayout, feedbackText: String) {
+        setFeedback(root, resources.getColor(R.color.green), feedbackText)
+    }
+
+    private fun getFeedbackElement(root: ConstraintLayout): Pair<TextView, Int> {
+        val tv = root.findViewById<TextView>(R.id.new_log_feedback_text)
+        tv.measure(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT)
+        val targetHeight = tv.measuredHeight
+        return Pair(tv, targetHeight)
+    }
+
+    private fun showFeedback(root: ConstraintLayout) {
+        val elemTargetHeight = getFeedbackElement(root)
+        val elem = elemTargetHeight.first
+        val targetHeight = elemTargetHeight.second
+
+        val anim = object : Animation() {
+            override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
+                elem.layoutParams.height = (targetHeight * interpolatedTime).toInt()
+                elem.requestLayout()
+            }
+        }
+        anim.duration = 400
+        view!!.startAnimation(anim)
+    }
+
+    private fun hideFeedback(root: ConstraintLayout) {
+        val elemTargetHeight = getFeedbackElement(root)
+        val elem = elemTargetHeight.first
+        val targetHeight = elemTargetHeight.second
+
+        if (elem.height > 0) {
+            val anim = object : Animation() {
+                override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
+                    elem.layoutParams.height = targetHeight - (targetHeight * interpolatedTime).toInt()
+                    elem.requestLayout()
+                }
+            }
+            anim.duration = 400
+            view!!.startAnimation(anim)
+        }
+    }
+
+
 }

@@ -3,18 +3,30 @@
     xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical">
 
+
+        <TextView
+            android:id="@+id/new_log_feedback_text"
+            android:background="@color/colorAccent"
+            android:layout_width="match_parent"
+            android:gravity="center"
+            android:padding="10dp"
+            android:minLines="2"
+            android:layout_height="0dp" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_gravity="center">
-
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -24,14 +36,17 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Date"/>
+                    android:text="@string/type_of_event"/>
 
                 <Spinner
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/new_log_log_type"
                     android:entries="@array/log_type" />
-
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/date"/>
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -41,17 +56,17 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/new_log_timestamp"
                         android:inputType="date"
-                        android:text="2017-11-12" />
+                        android:text="" />
                     <Button
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:id="@+id/new_log_pick_timestamp"
-                        android:text="Pick time"/>
+                        android:text="@string/pick_date"/>
                 </LinearLayout>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Start time"/>
+                    android:text="@string/start_time"/>
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -67,12 +82,12 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:id="@+id/new_log_pick_start_time"
-                        android:text="Pick time"/>
+                        android:text="@string/pick_time"/>
                 </LinearLayout>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="End time"/>
+                    android:text="@string/end_time"/>
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -81,18 +96,18 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:id="@+id/new_log_end_time"
-                        android:hint="17:30"
+                        android:hint="@string/_17_30"
                         android:inputType="time" />
                     <Button
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:id="@+id/new_log_pick_end_time"
-                        android:text="Pick time"/>
+                        android:text="@string/pick_time"/>
                 </LinearLayout>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Break time(minutes)"/>
+                    android:text="@string/break_time_minutes"/>
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -117,7 +132,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="5dp"
                         android:textStyle="italic"
-                        android:text="optional"/>
+                        android:text="@string/optional"/>
                 </LinearLayout>
                 <EditText
                     android:layout_width="fill_parent"
@@ -141,8 +156,7 @@
                     </LinearLayout>
             </LinearLayout>
         </LinearLayout>
-
-
     </LinearLayout>
+    </ScrollView>
 
 </android.support.constraint.ConstraintLayout>

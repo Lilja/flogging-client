@@ -96,11 +96,8 @@ class Flogging {
             instance
                     .document("users/$uid/projects/$projectName")
                     .set(projectSettings)
-                    .addOnSuccessListener {
-                        succeeded(true)
-                    }
-                    .addOnFailureListener {
-                        succeeded(false)
+                    .addOnCompleteListener {
+                        succeeded(it.isSuccessful)
                     }
         }
 
