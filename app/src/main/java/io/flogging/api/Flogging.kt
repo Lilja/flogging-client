@@ -75,7 +75,7 @@ class Flogging {
             )
         }
 
-        private fun createIndex(floggingRow: FloggingRow): String {
+        public fun createIndex(floggingRow: FloggingRow): String {
             return Flogs.YYYY_MM_DD_PATTERN.print(floggingRow.timestamp) + " " +
                     Flogs.HH_MM_PATTERN.print(floggingRow.startDate) + " " +
                     Flogs.HH_MM_PATTERN.print(floggingRow.endDate)
@@ -209,27 +209,25 @@ class Flogging {
 
         fun deleteLogEntry(projectName: String,
                            uid: String,
-                           timestamp: String,
-                           startTime: String,
-                           endTime: String,
-                           succeeded: (status: Boolean) -> Unit) {
+                           log: FloggingRow,
+                           completed: (status: Boolean, message: String) -> Unit) {
             val instance = FirebaseFirestore.getInstance()
-            val index = createIndex(timesToFloggingRow(timestamp, startTime, endTime))
+            val index = createIndex(log)
             instance.document("/users/$uid/projects/$projectName/timestamps/$index")
                     .delete()
                     .addOnCompleteListener {
-                        succeeded(it.isSuccessful)
+                        completed(it.isSuccessful, it.exception?.message ?: "")
                     }
         }
 
         fun deleteProject(projectName: String,
                           uid: String,
-                          succeeded: (status: Boolean) -> Unit) {
+                          succeeded: (status: Boolean, message: String) -> Unit) {
             val instance = FirebaseFirestore.getInstance()
             instance.document("/users/$uid/projects/$projectName")
                     .delete()
-                    .addOnCompleteListener { succeed ->
-                        succeeded(succeed.isSuccessful)
+                    .addOnCompleteListener {
+                        succeeded(it.isSuccessful, it.exception?.message ?: "")
                     }
         }
 
@@ -261,6 +259,24 @@ class Flogging {
 
                         Log.d("GetLogsForProject", records.map { it.timestamp }.toString())
                         callback(records)
+                    }
+
+        }
+
+        fun getSpecifcLogForProject(projectName: String,
+                                     uuid: String,
+                                     uniqueKey: String,
+                                     callback: (rows: List<FloggingRow>) -> Unit) {
+            Log.d("GetLogsForProject", "$projectName $uuid")
+            val instance = FirebaseFirestore.getInstance()
+            instance.document("/users/$uuid/projects/$projectName/timestamps/$uniqueKey")
+                    .get()
+                    .addOnCompleteListener { task ->
+                        val results = task.result
+                        Log.d("GetLogsForProject", results.toString())
+                        val record = firebaseRowToFloggingRow(results.data)
+
+                        callback(listOf(record))
                     }
 
         }

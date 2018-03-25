@@ -63,7 +63,7 @@ class SummaryView : Fragment() {
 
             alert.setButton(AlertDialog.BUTTON_NEGATIVE, "Cancel", { _, _ -> })
             alert.setButton(AlertDialog.BUTTON_POSITIVE, "Ok", { _, _ ->
-                Flogging.deleteProject(proj, uid, { success ->
+                Flogging.deleteProject(proj, uid, { success, _ ->
                     if (success) {
                         Flogging.getProjectsFromUser(uid, { projects ->
                             if (projects.isEmpty()) {
@@ -71,6 +71,7 @@ class SummaryView : Fragment() {
                                 startActivity(intent)
                             } else {
                                 pref.activeProject = projects.last()
+                                vm!!.loadProjects(uid)
                             }
 
                         })

@@ -9,6 +9,9 @@ class Prefs(context: Context) {
     private val PREFS_FILENAME = "io.flogging.prefs"
 
     private val PROJECT = "active_project"
+    private val UID = "active_user"
+    private val DISPLAY_NAME = "active_user_display_name"
+
     private val DAILY_HOUR = "active_hour"
     private val DAILY_MINUTE = "active_minute"
 
@@ -76,6 +79,22 @@ class Prefs(context: Context) {
         }
         set(endDate) {
             prefs.edit().putString(FILTER_END_DATE, endDate.toString(Flogs.YYYY_MM_DD_PATTERN)).apply()
+        }
+
+    var uid: String
+        get() {
+            return prefs.getString(UID, "")
+        }
+        set(uid) {
+           prefs.edit().putString(UID, uid).apply()
+        }
+
+    var displayName: String
+        get() {
+            return prefs.getString(DISPLAY_NAME, "")
+        }
+        set(uid) {
+           prefs.edit().putString(DISPLAY_NAME, uid).apply()
         }
 
 }

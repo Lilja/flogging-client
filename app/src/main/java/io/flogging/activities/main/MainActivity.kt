@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
     var disposable: Disposable? = null
 
     private fun setSpinnerListener(spinner: Spinner, prefs: Prefs) {
-        val uuid = vm!!.uuid!!
+        val uuid = prefs.uid
 
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(p0: AdapterView<*>?) {}
@@ -102,10 +102,10 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(tb)
 
         vm = ViewModelProviders.of(this).get(LogViewModel::class.java)
-        vm!!.uuid = uuid
-        vm!!.displayName = name
 
         val prefs = Prefs(context)
+        prefs.uid = uuid
+        prefs.displayName = name
 
         // Set up viewpager
         val pager = findViewById<ViewPager>(R.id.main_view_pager)
@@ -126,11 +126,11 @@ class MainActivity : AppCompatActivity() {
 
         getProjects(prefs)
         vm!!.loadLogsForProject(prefs.activeProject.projectName, uuid)
-        setUpIfFirstStartUp()
+        setUpIfFirstStartUp(prefs)
     }
 
     private fun getProjects(prefs: Prefs) {
-        vm!!.loadProjects(vm!!.uuid!!)
+        vm!!.loadProjects(prefs.uid)
 
         disposable = vm!!.projects.subscribe { rows ->
             Log.d("GetProjects", rows.toString())
@@ -163,9 +163,9 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun setUpIfFirstStartUp() {
-        val uuid = vm!!.uuid!!
-        val name = vm!!.displayName!!
+    private fun setUpIfFirstStartUp(prefs : Prefs) {
+        val uuid = prefs.uid
+        val name = prefs.displayName
 
         Flogging.initUser(uuid, name, {
             val intent = Intent(this, NewProject::class.java)

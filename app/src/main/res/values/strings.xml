@@ -4,12 +4,14 @@
         <item>Worked</item>
         <item>Paid leave</item>
         <item>Flex time off</item>
+        <item>Public holiday</item>
         <item>Other</item>
     </string-array>
 
     <string name="flog_status_type_w">Worked</string>
     <string name="flog_status_type_pl">Paid leave</string>
     <string name="flog_status_type_fto">Flex time off</string>
+    <string name="flog_status_type_ph">Public holiday</string>
     <string name="flog_status_type_other">Other</string>
 
     <string name="title_activity_new_log">NewLog</string>
@@ -31,4 +33,5 @@
     <string name="pick_date">Pick date</string>
     <string name="date">Date</string>
     <string name="type_of_event">Type of event</string>
+    <string name="type_of_log">Type of log</string>
 </resources>

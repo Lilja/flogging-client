@@ -11,8 +11,6 @@ import org.joda.time.DateTime
 class LogViewModel : ViewModel() {
     val logs: BehaviorSubject<List<FloggingRow>> = BehaviorSubject.create()
     val projects: BehaviorSubject<List<FloggingProject>> = BehaviorSubject.create()
-    var uuid: String? = null
-    var displayName: String? = null
 
     fun getLogsWithDiff(rows: List<FloggingRow>,
                         project: FloggingProject): List<Pair<Int, FloggingRow>> {
@@ -23,10 +21,11 @@ class LogViewModel : ViewModel() {
                 .sortedWith(compareBy(FloggingRow::timestamp))
                 .groupBy { it.timestamp.toString("MM-dd") }
         var previousEntryDiff = 0
-        val mutator = mutableListOf<Pair<Int, FloggingRow>>()
+        val workSheetDays = mutableListOf<Pair<Int, FloggingRow>>()
+
         perDay.map { (_, days) ->
-            var todaysDiff = previousEntryDiff
-            var hasSubtractedWithDailyLimit = false
+            // Tuple over current day and the list of records of that day
+            var todaysDiff = 0
             val otherMinutes = days.filter { it.status == FloggingRow.Status.OTHER }
                     .sumBy {
                         val listOfHHMM = it.decimal.split(":")
@@ -34,44 +33,65 @@ class LogViewModel : ViewModel() {
                         val minutes = if (listOfHHMM.size == 2) listOfHHMM[1].toInt() else 0
                         hours + minutes
                     }
-            for ((_, entry) in days.withIndex()) {
+
+            for ((idx, entry) in days.withIndex()) {
+                // If first record, assume that we're supposed to work by a fixed amount, and we
+                // "owe" to the client/company.
+
+                if (idx == 0 && Flogs.isWorkingDay(entry.timestamp)) {
+                    if (entry.status == FloggingRow.Status.WORKED ||
+                            entry.status == FloggingRow.Status.FLEX_TIME_OFF ||
+                            entry.status == FloggingRow.Status.PAID_LEAVE) {
+
+                        todaysDiff -= ((dailyHour * 60) + dailyMinute)
+                    }
+                }
+
                 val listOfHHMM = entry.decimal.split(":")
                 val hours = (if (listOfHHMM.size == 2) listOfHHMM[0].toInt() else entry.decimal.toInt()) * 60
                 val minutes = if (listOfHHMM.size == 2) listOfHHMM[1].toInt() else 0
-                var calc = 0
-                // Only calculate flex
-                if (entry.status == FloggingRow.Status.WORKED) {
-                    calc = if (!Flogs.isWorkingDay(entry.timestamp)) {
-                        // If working on a weekend, we should just add to the difference.
-                        (hours + minutes) + previousEntryDiff
-                    } else if (!hasSubtractedWithDailyLimit) {
-                        // If the current of this is day is the first one we should subtract by hours_per_day
-                        hasSubtractedWithDailyLimit = true
-                        todaysDiff = if (otherMinutes > 0) {
-                            ((hours + minutes) - (((dailyHour * 60) + dailyMinute) - otherMinutes)) + previousEntryDiff
-                        } else {
-                            ((hours + minutes) - (dailyHour * 60) + dailyMinute) + previousEntryDiff
-                        }
-                        todaysDiff
-                    } else {
-                        (hours + minutes) + todaysDiff
+                var currentEntryDiff = 0
+
+                when(entry.status) {
+                    FloggingRow.Status.WORKED,
+                    FloggingRow.Status.PAID_LEAVE,
+                    FloggingRow.Status.OTHER -> {
+                        currentEntryDiff = (hours + minutes)
                     }
-                } else if (entry.status == FloggingRow.Status.FLEX_TIME_OFF) {
-                    calc = previousEntryDiff - (hours + minutes)
-                } else if (entry.status == FloggingRow.Status.OTHER) {
-                    calc = previousEntryDiff
+                    FloggingRow.Status.FLEX_TIME_OFF -> {}
+                    FloggingRow.Status.PUBLIC_HOLIDAY -> {
+                        currentEntryDiff = 0
+                    }
                 }
-                previousEntryDiff = calc
-                mutator.add(Pair(calc, entry))
+
+                //println("${entry.status} ${entry.startDate} " +
+                //        "Current: $currentEntryDiff Today: $todaysDiff Prev: $previousEntryDiff")
+                currentEntryDiff = (todaysDiff + currentEntryDiff) + previousEntryDiff
+                todaysDiff = 0
+                workSheetDays.add(Pair(currentEntryDiff, entry))
+                previousEntryDiff = currentEntryDiff
+
+
             }
         }
-        return ArrayList(mutator)
+        return ArrayList(workSheetDays)
     }
 
     fun loadLogsForProject(projectName: String, uuid: String) {
         Flogging.getLogsForProject(
                 projectName,
                 uuid,
+                { rows ->
+                    logs.onNext(rows)
+                }
+        )
+    }
+
+    fun loadSpecificLogForProject(projectName: String, uuid: String, uniqueKey : String) {
+        Flogging.getSpecifcLogForProject(
+                projectName,
+                uuid,
+                uniqueKey,
                 { rows ->
                     logs.onNext(rows)
                 }
@@ -152,6 +172,13 @@ class LogViewModel : ViewModel() {
         Flogging.getProjectsFromUser(user, {
             projects.onNext(it)
         })
+    }
+
+    fun deleteLog(project: FloggingProject,
+                  user : String,
+                  log : FloggingRow,
+                  success: (b: Boolean, s: String) -> Unit) {
+       Flogging.deleteLogEntry(project.projectName, user, log, success)
     }
 
 }

@@ -14,6 +14,7 @@ data class FloggingRow(var timestamp: DateTime,
         WORKED(R.string.flog_status_type_w),
         PAID_LEAVE(R.string.flog_status_type_pl),
         FLEX_TIME_OFF(R.string.flog_status_type_fto),
+        PUBLIC_HOLIDAY(R.string.flog_status_type_ph),
         OTHER(R.string.flog_status_type_other)
     }
 

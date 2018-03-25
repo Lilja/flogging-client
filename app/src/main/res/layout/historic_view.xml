@@ -1,66 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-
-
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
         <include
-            android:layout_height="0dp"
+            layout="@layout/historic_view_filter"
             android:layout_width="match_parent"
-            layout="@layout/historic_view_filter" />
+            android:layout_height="0dp" />
 
         <ProgressBar
             android:id="@+id/historic_view_load"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"/>
-
+            android:layout_gravity="center" />
 
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-           <LinearLayout
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-               <LinearLayout
+
+                <LinearLayout
+                    android:id="@+id/output"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:id="@+id/output" />
+                    android:orientation="vertical" />
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/recyclerView"
+                    android:scrollbars="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:gravity="center"
+                    android:orientation="vertical">
 
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:id="@+id/total_hh_mm_flex_diff"
-                            android:layout_centerInParent="true"
-                            android:textSize="30dp"
-                            android:textColor="@color/green" />
-                    </RelativeLayout>
+                    <TextView
+                        android:id="@+id/total_hh_mm_flex_diff"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/green"
+                        android:textSize="30dp" />
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>
     </LinearLayout>
 
     <ImageView
-        android:layout_alignParentEnd="true"
         android:id="@+id/historic_view_filter_show"
-        android:src="@mipmap/ic_filter_list_black_24dp"
         android:layout_width="40dp"
-        android:layout_height="40dp" />
+        android:layout_height="40dp"
+        android:layout_alignParentEnd="true"
+        android:src="@mipmap/ic_filter_list_black_24dp" />
 </RelativeLayout>

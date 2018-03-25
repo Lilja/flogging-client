@@ -2,10 +2,11 @@ package io.flogging.activities.main.fragments
 
 import android.app.DatePickerDialog
 import android.arch.lifecycle.ViewModelProviders
-import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -13,10 +14,9 @@ import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.Transformation
 import android.widget.*
-import com.google.firebase.auth.FirebaseAuth
 import io.flogging.R
-import io.flogging.activities.logdetail.DetailedLogView
 import io.flogging.activities.main.viewmodels.LogViewModel
+import io.flogging.adapters.HistoricViewAdapter
 import io.flogging.model.FloggingRow
 import io.flogging.util.Flogs
 import io.flogging.util.Prefs
@@ -32,14 +32,16 @@ class HistoricView : Fragment() {
         Log.d("HistoricView", "OnCreateView called")
         val root = inflater!!.inflate(R.layout.historic_view, container, false) as RelativeLayout
         val prefs = Prefs(activity)
-        val uid = FirebaseAuth.getInstance().uid.toString()
+
+        val viewMng = LinearLayoutManager(activity)
 
         vm = ViewModelProviders.of(activity).get(LogViewModel::class.java)
+        val uid = prefs.uid
+
         sub = vm!!.logs.subscribe { rows ->
             Log.d("Logs subscriber", "${prefs.activeProject.projectName} $uid")
-            root.findViewById<ProgressBar>(R.id.historic_view_load).visibility = ProgressBar.GONE
+            displayLoading(root)
             Thread(Runnable {
-                val ll = root.findViewById<LinearLayout>(R.id.output)
                 val logs = vm!!.getLogsWithDiff(rows, prefs.activeProject)
                 Log.d("Logs subscriber", prefs.chronoicalOrder.toString())
                 Log.d("Logs subscriber", logs.map { it.second }.toString())
@@ -53,9 +55,18 @@ class HistoricView : Fragment() {
 
                 activity.runOnUiThread {
                     val ts = DateTime.now()
-                    printRecord(ll, filteredLogs)
-                    setTotalDiff(root.findViewById(R.id.total_hh_mm_flex_diff), logs)
+                    val viewAdapter = HistoricViewAdapter(vm!!, prefs.activeProject, activity, filteredLogs)
+
+                    val recycleView = root.findViewById<RecyclerView>(R.id.recyclerView)
+                    viewAdapter.notifyDataSetChanged()
+                    recycleView.apply {
+                        setHasFixedSize(true)
+                        layoutManager = viewMng
+                        adapter = viewAdapter
+                    }
+                    setTotalDiff(root.findViewById(R.id.total_hh_mm_flex_diff), filteredLogs)
                     val ts2 = DateTime.now()
+                    hideLoading(root)
                     Log.d("Historic", "Rendering took " + (ts2.millis - ts.millis) + " ms")
                 }
             }).start()
@@ -68,7 +79,6 @@ class HistoricView : Fragment() {
 
         root.findViewById<ImageView>(R.id.historic_view_filter_show)
                 .setOnClickListener {
-
                     if (filterRoot.height > 0) {
                         val anim = object : Animation() {
                             override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
@@ -106,36 +116,6 @@ class HistoricView : Fragment() {
         return Flogs.hhMMWithDiff(Flogs.minutesToHHMM(minutes))
     }
 
-    private fun printRecord(linearLayout: LinearLayout,
-                            listOfRowWithDecimal: List<Pair<Int, FloggingRow>>) {
-        if (linearLayout.childCount > 0)
-            linearLayout.removeAllViews()
-        listOfRowWithDecimal.groupBy {
-            it.second.timestamp.toString("MM-dd")
-        }.map {
-            val headerLayout = layoutInflater.inflate(R.layout.historic_view_date, null)
-                    as LinearLayout
-            populateHeader(headerLayout, it.value[0])
-            val stuff = it.value.map {
-                Log.d("PrintRecord", it.second.timestamp.toString())
-                val newLayout = layoutInflater.inflate(R.layout.historic_view_entry, null)
-                newLayout.setOnClickListener {
-                    val intent = Intent(activity, DetailedLogView::class.java)
-                    Log.d("PrintRecordOnclick", (it.findViewById<TextView>(R.id.selector) as TextView).text.toString())
-                    intent.putExtra("index",
-                            (it.findViewById<TextView>(R.id.selector) as TextView).text)
-                    startActivity(intent)
-                }
-                record(newLayout as LinearLayout, it)
-            }
-            listOf<LinearLayout>() + headerLayout + stuff
-        }.forEach {
-            it.forEach {
-                linearLayout.addView(it)
-            }
-        }
-    }
-
     private fun setTotalDiff(linearLayout: View,
                              listOfRowWithDecimal: List<Pair<Int, FloggingRow>>) {
         val text = linearLayout.findViewById<TextView>(R.id.total_hh_mm_flex_diff)
@@ -151,68 +131,17 @@ class HistoricView : Fragment() {
         }
     }
 
-    private fun populateHeader(linearLayout: LinearLayout,
-                               rowWithDecimal: Pair<Int, FloggingRow>) {
-        val t = linearLayout.findViewById<TextView>(R.id.header_date)
-        t.text = rowWithDecimal.second.timestamp.toString(Flogs.HEADER_PATTERN)
-    }
-
-    private fun record(linearLayout: LinearLayout,
-                       rowWithDecimal: Pair<Int, FloggingRow>): LinearLayout {
-        val floggingRow = rowWithDecimal.second
-
-        val hiddenText = linearLayout.findViewById<TextView>(R.id.selector)
-        val asdf = floggingRow.timestamp.toString(Flogs.YYYY_MM_DD_PATTERN) + " " +
-                floggingRow.startDate.toString(Flogs.HH_MM_PATTERN) + " " +
-                floggingRow.endDate.toString(Flogs.HH_MM_PATTERN)
-        hiddenText.text = asdf
-
-        Log.d("printRecord", floggingRow.toString())
-
-        val startTime = linearLayout.findViewById<TextView>(R.id.start_time)
-        startTime.text = floggingRow.startDate.toString(Flogs.HH_MM_PATTERN)
-
-        val endTime = linearLayout.findViewById<TextView>(R.id.end_time)
-        endTime.text = floggingRow.endDate.toString(Flogs.HH_MM_PATTERN)
-
-        val breakTime = linearLayout.findViewById<TextView>(R.id.break_time)
-        breakTime.text = floggingRow.breakMinutes.toString()
-
-        val decimalText = linearLayout.findViewById<TextView>(R.id.decimal_time)
-        decimalText.text = floggingRow.decimal
-
-        if (!Flogs.isWorkingDay(floggingRow.timestamp)) {
-            val dbgText = linearLayout.findViewById<TextView>(R.id.debug_non_workday)
-            dbgText.visibility = TextView.VISIBLE
-        }
-        val d = linearLayout.findViewById<ImageView>(R.id.status)
-        if (floggingRow.status == FloggingRow.Status.FLEX_TIME_OFF) {
-            d.setBackgroundColor(ContextCompat.getColor(activity, R.color.yellow))
-        } else if (floggingRow.status == FloggingRow.Status.PAID_LEAVE) {
-            d.setBackgroundColor(ContextCompat.getColor(activity, R.color.red))
-        }
-
-        val diffText = linearLayout.findViewById<TextView>(R.id.diff_time)
-        val res = Flogs.hhMMWithDiff(Flogs.minutesToHHMM(rowWithDecimal.first))
-        if ("-" in res) {
-            diffText.setTextColor(ContextCompat.getColor(activity, R.color.red))
-        }
-        diffText.text = res
-
-        return linearLayout
-    }
-
     private fun setupFilterFunctions(prefs: Prefs, root: RelativeLayout) {
         fun setStartDateText() {
-            val startDateText = root.findViewById<EditText>(R.id.historic_view_filter_start_date_text)
-            startDateText
-                    .setText(prefs.startDate.toString(Flogs.YYYY_MM_DD_PATTERN), TextView.BufferType.EDITABLE)
+            root.findViewById<EditText>(R.id.historic_view_filter_start_date_text)
+                    .setText(prefs.startDate.toString(Flogs.YYYY_MM_DD_PATTERN),
+                            TextView.BufferType.EDITABLE)
         }
 
         fun setEndDateText() {
-            val endDateText = root.findViewById<EditText>(R.id.historic_view_filter_end_date_text)
-            endDateText
-                    .setText(prefs.endDate.toString(Flogs.YYYY_MM_DD_PATTERN), TextView.BufferType.EDITABLE)
+            root.findViewById<EditText>(R.id.historic_view_filter_end_date_text)
+                    .setText(prefs.endDate.toString(Flogs.YYYY_MM_DD_PATTERN),
+                            TextView.BufferType.EDITABLE)
         }
         root.findViewById<CheckBox>(R.id.historic_view_filter_chronological_order)
                 .setOnCheckedChangeListener { a: CompoundButton?, b: Boolean ->
@@ -223,29 +152,28 @@ class HistoricView : Fragment() {
 
         setStartDateText()
         setEndDateText()
-        val startDate = root.findViewById<ImageView>(R.id.historic_view_filter_start_date)
+        val startDateView = root.findViewById<ImageView>(R.id.historic_view_filter_start_date)
 
-        startDate
-                .setOnClickListener {
-                    val c = Calendar.getInstance()
-                    DatePickerDialog(activity, { _: DatePicker,
-                                                 year: Int,
-                                                 month: Int,
-                                                 day: Int ->
+        startDateView.setOnClickListener {
+            val c = Calendar.getInstance()
+            DatePickerDialog(activity, { _: DatePicker,
+                                         year: Int,
+                                         month: Int,
+                                         day: Int ->
 
-                        val zeroedMonth = if ((month + 1) < 10) "0" + (month + 1) else month.toString()
-                        val zeroedDay = if (day < 10) "0" + day else day.toString()
-                        root.findViewById<EditText>(R.id.historic_view_filter_start_date_text)
-                                .setText(year.toString() + "-" + zeroedMonth + "-" + zeroedDay,
-                                        TextView.BufferType.EDITABLE)
-                        prefs.startDate = DateTime(year, zeroedMonth.toInt(), day, 0, 0, 0, 0)
-                        setStartDateText()
-                        vm!!.omitCurrentLogs()
+                val zeroedMonth = if ((month + 1) < 10) "0" + (month + 1) else month.toString()
+                val zeroedDay = if (day < 10) "0" + day else day.toString()
+                root.findViewById<EditText>(R.id.historic_view_filter_start_date_text)
+                        .setText(year.toString() + "-" + zeroedMonth + "-" + zeroedDay,
+                                TextView.BufferType.EDITABLE)
+                prefs.startDate = DateTime(year, zeroedMonth.toInt(), day, 0, 0, 0, 0)
+                setStartDateText()
+                vm!!.omitCurrentLogs()
 
-                    }, c.get(Calendar.YEAR),
-                            c.get(Calendar.MONTH),
-                            c.get(Calendar.DAY_OF_MONTH)).show()
-                }
+            }, c.get(Calendar.YEAR),
+                    c.get(Calendar.MONTH),
+                    c.get(Calendar.DAY_OF_MONTH)).show()
+        }
         root.findViewById<ImageView>(R.id.historic_view_filter_end_date)
                 .setOnClickListener {
                     val c = Calendar.getInstance()
@@ -268,4 +196,13 @@ class HistoricView : Fragment() {
                             c.get(Calendar.DAY_OF_MONTH)).show()
                 }
     }
+
+    private fun displayLoading(root: RelativeLayout) {
+        root.findViewById<ProgressBar>(R.id.historic_view_load).visibility = ProgressBar.VISIBLE
+    }
+
+    private fun hideLoading(root: RelativeLayout) {
+        root.findViewById<ProgressBar>(R.id.historic_view_load).visibility = ProgressBar.GONE
+    }
+
 }

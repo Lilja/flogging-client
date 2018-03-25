@@ -1,8 +1,15 @@
 package io.flogging.activities.main.fragments
 
+import android.animation.Animator
+import android.animation.ArgbEvaluator
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.arch.lifecycle.ViewModelProviders
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
@@ -99,7 +106,13 @@ class NewLog : Fragment() {
                     val prefs = Prefs(activity)
                     val projectName = prefs.activeProject.projectName
 
-                    val uuid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+                    val uuid = prefs.uid
+
+                    val logType = (root.findViewById<Spinner>(R.id.new_log_log_type))
+                            .selectedItem
+                            .toString()
+                            .replace(" ", "_")
+
                     Log.d("NewLog", "$start $end $breakTime")
                     viewModel.add_log(
                             projectName,
@@ -108,13 +121,14 @@ class NewLog : Fragment() {
                             start,
                             end,
                             breakTime.toInt(),
-                            (root.findViewById<Spinner>(R.id.new_log_log_type)).selectedItem.toString(),
+                            logType,
                             (root.findViewById<EditText>(R.id.new_log_note) as EditText).text.toString(),
                             { success: Boolean, message: String ->
                                 Log.d("FirebasePost", "Saved?" + success)
 
                                 if (success) {
                                     setPositiveFeedback(root, "Successfully created")
+                                    hideFeedbackAfterXSeconds(root, 5)
                                 } else {
                                     setNegativeFeedback(root, "Failed: " + message)
                                 }
@@ -238,6 +252,15 @@ class NewLog : Fragment() {
         view!!.startAnimation(anim)
     }
 
+    private fun hideFeedbackAfterXSeconds(root: ConstraintLayout, seconds : Int) {
+       Thread {
+           Thread.sleep((seconds * 1000).toLong())
+           activity.runOnUiThread {
+               hideFeedback(root)
+           }
+       } .start()
+    }
+
     private fun hideFeedback(root: ConstraintLayout) {
         val elemTargetHeight = getFeedbackElement(root)
         val elem = elemTargetHeight.first
@@ -251,7 +274,46 @@ class NewLog : Fragment() {
                 }
             }
             anim.duration = 400
-            view!!.startAnimation(anim)
+            val currentColor = elem.currentTextColor
+
+            val bgColor = (elem.background as ColorDrawable).color
+
+            val colorTo = (if (bgColor == resources.getColor(R.color.green)) {
+                R.color.green
+            } else {
+                R.color.red
+            })
+            Log.d("TextAnimation", "Current color: $currentColor Color to: $colorTo" )
+            val animation = ValueAnimator.ofObject(
+                    ArgbEvaluator(),
+                    R.color.black,
+                    R.color.white)
+            animation.addUpdateListener {
+                Log.d("TextAnimation", "Value: ${it.animatedValue}")
+                elem.setTextColor(it.animatedValue.toString().toInt())
+            }
+
+            val res = ObjectAnimator.ofInt(elem, "textColor", currentColor, Color.WHITE)
+            res.setEvaluator(ArgbEvaluator())
+            res.duration = 2000
+            res.addListener(object : Animator.AnimatorListener {
+                override fun onAnimationRepeat(p0: Animator?) {}
+                override fun onAnimationCancel(p0: Animator?) {}
+                override fun onAnimationStart(p0: Animator?) {
+                    Log.d("TextAnimation", "Starting text animation(handler)")
+                }
+
+                override fun onAnimationEnd(p0: Animator?) {
+                    Log.d("TextAnimation", "Ending text animation(handler)")
+                    //view!!.startAnimation(anim)
+                }
+            })
+            res.start()
+
+            animation.duration = 2000
+
+            Log.d("TextAnimation", "Starting text animation")
+            //animation.start()
         }
     }
 
