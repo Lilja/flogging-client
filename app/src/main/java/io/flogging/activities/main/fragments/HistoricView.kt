@@ -155,7 +155,13 @@ class HistoricView : Fragment() {
         val startDateView = root.findViewById<ImageView>(R.id.historic_view_filter_start_date)
 
         startDateView.setOnClickListener {
-            val c = Calendar.getInstance()
+
+            val startD = prefs.startDate
+
+            val dpYear = startD.year
+            val dpMonth = startD.monthOfYear-1 // subtract with 1 because of DatePicker API
+            val dpDay = startD.dayOfMonth
+
             DatePickerDialog(activity, { _: DatePicker,
                                          year: Int,
                                          month: Int,
@@ -170,13 +176,16 @@ class HistoricView : Fragment() {
                 setStartDateText()
                 vm!!.omitCurrentLogs()
 
-            }, c.get(Calendar.YEAR),
-                    c.get(Calendar.MONTH),
-                    c.get(Calendar.DAY_OF_MONTH)).show()
+            }, dpYear, dpMonth, dpDay).show()
         }
         root.findViewById<ImageView>(R.id.historic_view_filter_end_date)
                 .setOnClickListener {
-                    val c = Calendar.getInstance()
+                    val endD = prefs.endDate
+
+                    val dpYear = endD.year
+                    val dpMonth = endD.monthOfYear-1 // subtract with 1 because of DatePicker API
+                    val dpDay = endD.dayOfMonth
+
                     DatePickerDialog(activity, { _: DatePicker,
                                                  year: Int,
                                                  month: Int,
@@ -191,9 +200,7 @@ class HistoricView : Fragment() {
                         setEndDateText()
                         vm!!.omitCurrentLogs()
 
-                    }, c.get(Calendar.YEAR),
-                            c.get(Calendar.MONTH),
-                            c.get(Calendar.DAY_OF_MONTH)).show()
+                    }, dpYear, dpMonth, dpDay).show()
                 }
     }
 

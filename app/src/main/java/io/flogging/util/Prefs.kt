@@ -12,6 +12,10 @@ class Prefs(context: Context) {
     private val UID = "active_user"
     private val DISPLAY_NAME = "active_user_display_name"
 
+    // When the user successfully inserted a log, save the timestamp because they might
+    // do something with that timestamp the next time they log something
+    private val LAST_INSERTED_TIMESTAMP = "new_log_last_inserted_timestamp"
+
     private val DAILY_HOUR = "active_hour"
     private val DAILY_MINUTE = "active_minute"
 
@@ -57,12 +61,11 @@ class Prefs(context: Context) {
 
     var startDate: DateTime
         get() {
-            val now = DateTime.now()
             val yymmdd = prefs.getString(FILTER_START_DATE, "")
             if (yymmdd.length == 10) {
                 return DateTime.parse(yymmdd, Flogs.YYYY_MM_DD_PATTERN)
             }
-            return now
+            return DateTime.now()
         }
         set(startDate) {
             prefs.edit().putString(FILTER_START_DATE, startDate.toString(Flogs.YYYY_MM_DD_PATTERN)).apply()
@@ -70,12 +73,11 @@ class Prefs(context: Context) {
 
     var endDate: DateTime
         get() {
-            val now = DateTime.now()
             val yymmdd = prefs.getString(FILTER_END_DATE, "")
             if (yymmdd.length == 10) {
                 return DateTime.parse(yymmdd, Flogs.YYYY_MM_DD_PATTERN)
             }
-            return now
+            return DateTime.now()
         }
         set(endDate) {
             prefs.edit().putString(FILTER_END_DATE, endDate.toString(Flogs.YYYY_MM_DD_PATTERN)).apply()
@@ -86,7 +88,7 @@ class Prefs(context: Context) {
             return prefs.getString(UID, "")
         }
         set(uid) {
-           prefs.edit().putString(UID, uid).apply()
+            prefs.edit().putString(UID, uid).apply()
         }
 
     var displayName: String
@@ -94,7 +96,20 @@ class Prefs(context: Context) {
             return prefs.getString(DISPLAY_NAME, "")
         }
         set(uid) {
-           prefs.edit().putString(DISPLAY_NAME, uid).apply()
+            prefs.edit().putString(DISPLAY_NAME, uid).apply()
+        }
+
+    var lastInsertedTimestamp: DateTime
+        get() {
+            val yyyymmdd = prefs.getString(LAST_INSERTED_TIMESTAMP, "")
+            if (yyyymmdd.length == 10) {
+                return DateTime.parse(yyyymmdd, Flogs.YYYY_MM_DD_PATTERN)
+            }
+            return DateTime.now()
+        }
+        set(value) {
+            prefs.edit().putString(LAST_INSERTED_TIMESTAMP,
+                    lastInsertedTimestamp.toString(Flogs.YYYY_MM_DD_PATTERN)).apply()
         }
 
 }

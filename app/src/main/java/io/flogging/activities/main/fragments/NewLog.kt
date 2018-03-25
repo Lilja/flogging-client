@@ -9,7 +9,6 @@ import android.app.TimePickerDialog
 import android.arch.lifecycle.ViewModelProviders
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
@@ -22,16 +21,13 @@ import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.Transformation
 import android.widget.*
-import com.google.firebase.auth.FirebaseAuth
 import io.flogging.R
 import io.flogging.activities.main.viewmodels.LogViewModel
 import io.flogging.api.Flogging
-import io.flogging.model.FloggingRow
 import io.flogging.util.Flogs
 import io.flogging.util.Prefs
 import io.reactivex.disposables.Disposable
 import org.joda.time.DateTime
-import java.util.*
 
 class NewLog : Fragment() {
 
@@ -45,9 +41,10 @@ class NewLog : Fragment() {
 
         initFeedbackView(root)
         vm = ViewModelProviders.of(activity).get(LogViewModel::class.java)
+        val prefs = Prefs(activity)
         sub = vm!!.logs.subscribe {
             setDefaults(root)
-            initLayout(root, it, vm!!)
+            initLayout(root, vm!!, prefs)
         }
         return root
     }
@@ -87,8 +84,8 @@ class NewLog : Fragment() {
                 })
     }
 
-    private fun initLayout(root: ConstraintLayout, logs: List<FloggingRow>, viewModel: LogViewModel) {
-        root.findViewById<Button>(R.id.new_log_save)
+    private fun configureSaveButton(root: ConstraintLayout, viewModel: LogViewModel, prefs : Prefs) {
+       root.findViewById<Button>(R.id.new_log_save)
                 .setOnClickListener({
                     Log.d("Button", "Clicked")
                     Log.d("Button", "Hiding feedback if possible")
@@ -103,7 +100,6 @@ class NewLog : Fragment() {
                     val maybeBreak = (root.findViewById<EditText>(R.id.new_log_break_time) as EditText).text
                     val breakTime = if (maybeBreak.isEmpty()) "60" else maybeBreak.toString()
 
-                    val prefs = Prefs(activity)
                     val projectName = prefs.activeProject.projectName
 
                     val uuid = prefs.uid
@@ -113,11 +109,15 @@ class NewLog : Fragment() {
                             .toString()
                             .replace(" ", "_")
 
+                    val textOfTimestamp = (root.findViewById<EditText>(R.id.new_log_timestamp)
+                            as EditText).text.toString()
+                    val timestamp = DateTime.parse(textOfTimestamp, Flogs.YYYY_MM_DD_PATTERN)
+
                     Log.d("NewLog", "$start $end $breakTime")
                     viewModel.add_log(
                             projectName,
                             uuid,
-                            (root.findViewById<EditText>(R.id.new_log_timestamp) as EditText).text.toString(),
+                            textOfTimestamp,
                             start,
                             end,
                             breakTime.toInt(),
@@ -129,6 +129,7 @@ class NewLog : Fragment() {
                                 if (success) {
                                     setPositiveFeedback(root, "Successfully created")
                                     hideFeedbackAfterXSeconds(root, 5)
+                                    prefs.lastInsertedTimestamp = timestamp
                                 } else {
                                     setNegativeFeedback(root, "Failed: " + message)
                                 }
@@ -136,15 +137,22 @@ class NewLog : Fragment() {
                             }
                     )
                 })
+    }
 
+    private fun initLayout(root: ConstraintLayout,
+                           viewModel: LogViewModel,
+                           prefs: Prefs) {
+        configureSaveButton(root, viewModel, prefs)
+
+        // Press the timestamp button that will trigger a Datepicker to show up
         root.findViewById<Button>(R.id.new_log_pick_timestamp).setOnClickListener({
-            val c = Calendar.getInstance()
             val etText = root.findViewById<EditText>(R.id.new_log_timestamp).text.toString()
             val etTextHasText = !etText.isEmpty()
 
-            val dpYear = if(etTextHasText) etText.split("-")[0].toInt() else c.get(Calendar.YEAR)
-            val dpMonth = (if(etTextHasText) etText.split("-")[1].toInt() else c.get(Calendar.MONTH))-1
-            val dpDay = if (etTextHasText) etText.split("-")[2].toInt() else c.get(Calendar.DAY_OF_MONTH)
+            val lastInsertedTs = prefs.lastInsertedTimestamp
+            val dpYear = if (etTextHasText) etText.split("-")[0].toInt() else lastInsertedTs.year
+            val dpMonth = (if (etTextHasText) etText.split("-")[1].toInt() else lastInsertedTs.monthOfYear)
+            val dpDay = if (etTextHasText) etText.split("-")[2].toInt() else lastInsertedTs.dayOfMonth
 
             DatePickerDialog(activity, { _: DatePicker,
                                          year: Int,
@@ -157,9 +165,10 @@ class NewLog : Fragment() {
                         .setText(year.toString() + "-" + zeroedMonth + "-" + zeroedDay,
                                 TextView.BufferType.EDITABLE)
 
-            }, dpYear, dpMonth, dpDay).show()
+            }, dpYear, dpMonth-1, dpDay).show()
         })
 
+        // Press the start timepicking button that will trigger a Timepicker to show up
         root.findViewById<Button>(R.id.new_log_pick_start_time).setOnClickListener({
             TimePickerDialog(activity, { _: TimePicker,
                                          i: Int,
@@ -173,6 +182,7 @@ class NewLog : Fragment() {
             }, 8, 30, true).show()
         })
 
+        // Press the end timepicking button that will trigger a Timepicker to show up
         root.findViewById<Button>(R.id.new_log_pick_end_time).setOnClickListener({
             TimePickerDialog(activity, { _: TimePicker,
                                          i: Int,
@@ -252,13 +262,13 @@ class NewLog : Fragment() {
         view!!.startAnimation(anim)
     }
 
-    private fun hideFeedbackAfterXSeconds(root: ConstraintLayout, seconds : Int) {
-       Thread {
-           Thread.sleep((seconds * 1000).toLong())
-           activity.runOnUiThread {
-               hideFeedback(root)
-           }
-       } .start()
+    private fun hideFeedbackAfterXSeconds(root: ConstraintLayout, seconds: Int) {
+        Thread {
+            Thread.sleep((seconds * 1000).toLong())
+            activity.runOnUiThread {
+                hideFeedback(root)
+            }
+        }.start()
     }
 
     private fun hideFeedback(root: ConstraintLayout) {
@@ -283,7 +293,7 @@ class NewLog : Fragment() {
             } else {
                 R.color.red
             })
-            Log.d("TextAnimation", "Current color: $currentColor Color to: $colorTo" )
+            Log.d("TextAnimation", "Current color: $currentColor Color to: $colorTo")
             val animation = ValueAnimator.ofObject(
                     ArgbEvaluator(),
                     R.color.black,
