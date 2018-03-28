@@ -264,10 +264,10 @@ class Flogging {
         }
 
         fun getSpecifcLogForProject(projectName: String,
-                                     uuid: String,
-                                     uniqueKey: String,
-                                     callback: (rows: List<FloggingRow>) -> Unit) {
-            Log.d("GetLogsForProject", "$projectName $uuid")
+                                    uuid: String,
+                                    uniqueKey: String,
+                                    callback: (rows: List<FloggingRow>) -> Unit) {
+            Log.d("GetLogsForProject", "$projectName $uuid $uniqueKey")
             val instance = FirebaseFirestore.getInstance()
             instance.document("/users/$uuid/projects/$projectName/timestamps/$uniqueKey")
                     .get()
@@ -298,6 +298,33 @@ class Flogging {
                                     }
                         }
                     }
+        }
+
+        fun updateLog(projectName: FloggingProject,
+                      user: String,
+                      oldUniqueKey: String,
+                      uniqueKey: String,
+                      log: FloggingRow,
+                      success: (b: Boolean, s: String) -> Unit) {
+            val fbLog = FloggingRowFireStore(log)
+            val instance = FirebaseFirestore.getInstance()
+            Log.d("GetLogsForProject", "$projectName $user $oldUniqueKey")
+            instance.document("/users/$user/projects/${projectName.projectName}/timestamps/$oldUniqueKey")
+                    .delete()
+                    .addOnCompleteListener {
+                        if(it.isSuccessful) {
+                            Log.d("GetLogsForProject", "$projectName $user $uniqueKey")
+                            instance.document("/users/$user/projects/${projectName.projectName}/timestamps/$uniqueKey")
+                                    .set(fbLog)
+                                    .addOnCompleteListener {
+                                        success(it.isSuccessful, it.exception?.message ?: "")
+                                    }
+                        } else {
+                            success(false, it.exception?.message?:"")
+                        }
+                    }
+
+
         }
     }
 

@@ -6,71 +6,160 @@
     android:layout_height="match_parent"
     tools:context="io.flogging.activities.logdetail.DetailedLogView">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/detailed_log_view_timestamp"
-            android:text="2017-11-30"
-            android:textStyle="bold"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="10dp">
 
-        <Spinner
-            android:id="@+id/detailed_log_view_type_of_log"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:entries="@array/log_type"
-            android:clickable="false"
-            />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Start:"
-            android:textStyle="bold"
-            />
-         <TextView
-            android:id="@+id/detailed_log_view_start"
-            android:text="08:00"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="End:"
-            android:textStyle="bold"/>
-         <TextView
-            android:id="@+id/detailed_log_view_end"
-            android:text="17:00"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:text="Diff:"/>
-        <TextView
-            android:id="@+id/detailed_log_view_decimal"
-            android:text="8:00"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:text="Note:"/>
-        <TextView
-            android:id="@+id/detailed_log_view_note"
-            android:text="djoqwijdoqwijd qowidjqow diqw doqiwj doqiwjdoqwijdoqwjiqowjdqowijdoqwijdoqwijdoqwijdoqiwjdqowijdqowidjqwoidjqowdijqwoidjqwoidjqwoidj"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:text="When: "
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/detailed_log_view_timestamp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2017-11-30" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:text="Type of log"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/detailed_log_view_type_of_log"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:entries="@array/log_type" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Start:"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/detailed_log_view_start"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="08:00" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="End:"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/detailed_log_view_end"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="17:00" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="End:"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/detailed_log_view_break"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="60" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Diff:"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/detailed_log_view_decimal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="8:00" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Note:"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/detailed_log_view_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
         <Button
             android:id="@+id/detailed_log_view_button_delete"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="delete"/>
-    </LinearLayout>
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_margin="10dp"
+            android:background="@color/red"
+            android:text="delete" />
+
+        <Button
+            android:id="@+id/detailed_log_view_button_update"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_margin="10dp"
+            android:background="@color/green"
+            android:text="Update" />
+    </RelativeLayout>
 
 </android.support.constraint.ConstraintLayout>

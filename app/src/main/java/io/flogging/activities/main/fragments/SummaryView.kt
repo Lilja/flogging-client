@@ -34,20 +34,26 @@ class SummaryView : Fragment() {
         Log.d("SummaryView", "OnCreateView")
         val root = inflater!!.inflate(R.layout.fragment_summary_view, container, false) as FrameLayout
         vm = ViewModelProviders.of(activity).get(LogViewModel::class.java)
-        sub = vm!!.logs.subscribe {
-            if (this@SummaryView.isVisible) {
-                setupGraph(root, it)
-                setupBtn(root)
-            }
-        }
+
         return root
     }
 
-    override fun onPause() {
+    override fun onStart() {
+        super.onStart()
+        val root = view!! as FrameLayout
+
+        sub = vm!!.logs.subscribe {
+            setupGraph(root, it)
+            setupBtn(root)
+        }
+    }
+
+    override fun onStop() {
         if (sub!=null) {
             sub!!.dispose()
         }
-        super.onPause()
+
+        super.onStop()
     }
 
     private fun setupBtn(root: FrameLayout) {
@@ -57,7 +63,7 @@ class SummaryView : Fragment() {
         btn.text = "Delete project $proj"
         btn.setOnClickListener {
             val alert = AlertDialog.Builder(activity).create()
-            val uid = FirebaseAuth.getInstance().uid.toString()
+            val uid = pref.uid
             alert.setTitle("Delete a project")
             alert.setMessage("Are you REALLY sure you want to delete the project $proj")
 
@@ -85,7 +91,6 @@ class SummaryView : Fragment() {
     private fun setupGraph(root: FrameLayout, logs : List<FloggingRow>) {
         val prefs = Prefs(activity)
 
-        val uid = FirebaseAuth.getInstance().uid.toString()
         Log.d("SummaryView", "Getting project name")
         val projName = prefs.activeProject.projectName
         Log.d("SummaryView", "Getting project name: $projName")

@@ -70,8 +70,6 @@ class LogViewModel : ViewModel() {
                 todaysDiff = 0
                 workSheetDays.add(Pair(currentEntryDiff, entry))
                 previousEntryDiff = currentEntryDiff
-
-
             }
         }
         return ArrayList(workSheetDays)
@@ -179,6 +177,16 @@ class LogViewModel : ViewModel() {
                   log : FloggingRow,
                   success: (b: Boolean, s: String) -> Unit) {
        Flogging.deleteLogEntry(project.projectName, user, log, success)
+    }
+
+    fun updateLog(projectName: FloggingProject,
+                  user : String,
+                  oldUniqueKey: String,
+                  uniqueKey: String,
+                  log: FloggingRow,
+                  success: (b: Boolean, s: String) -> Unit) {
+        Flogging.updateLog(projectName, user, oldUniqueKey,
+                uniqueKey, log, success)
     }
 
 }

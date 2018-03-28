@@ -1,5 +1,6 @@
 package io.flogging.activities.main.fragments
 
+import android.app.Activity
 import android.app.DatePickerDialog
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
@@ -21,61 +22,75 @@ import io.flogging.model.FloggingRow
 import io.flogging.util.Flogs
 import io.flogging.util.Prefs
 import io.reactivex.disposables.Disposable
+import io.reactivex.subjects.BehaviorSubject
 import org.joda.time.DateTime
-import java.util.*
 
 class HistoricView : Fragment() {
     var vm: LogViewModel? = null
     var sub: Disposable? = null
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        Log.d("HistoricView", "OnCreateView called")
-        val root = inflater!!.inflate(R.layout.historic_view, container, false) as RelativeLayout
+    override fun onStart() {
+        val root = view!! as RelativeLayout
         val prefs = Prefs(activity)
 
-        val viewMng = LinearLayoutManager(activity)
-
-        vm = ViewModelProviders.of(activity).get(LogViewModel::class.java)
-        val uid = prefs.uid
-
+        Log.d("HistoricView", "onStart")
         sub = vm!!.logs.subscribe { rows ->
-            Log.d("Logs subscriber", "${prefs.activeProject.projectName} $uid")
+            Log.d("HistoricView", "Listener received events")
+            subscriptionListener(root, rows, prefs, activity)
+        }
+        super.onStart()
+    }
+
+    private fun subscriptionListener(root: RelativeLayout,
+                                     rows: List<FloggingRow>,
+                                     prefs: Prefs,
+                                     activity: Activity) {
+            Log.d("HistoricView", "Notified of new events")
             displayLoading(root)
             Thread(Runnable {
                 val logs = vm!!.getLogsWithDiff(rows, prefs.activeProject)
-                Log.d("Logs subscriber", prefs.chronoicalOrder.toString())
-                Log.d("Logs subscriber", logs.map { it.second }.toString())
                 val sortedLogs = if (prefs.chronoicalOrder) logs else logs.reversed()
-                Log.d("Logs subscriber", sortedLogs.map { it.second }.toString())
                 val startFilter = prefs.startDate
                 val endFilter = prefs.endDate
 
                 // Run the logs through a filter of startDate and endDate
                 val filteredLogs = sortedLogs.filter { it.second.timestamp in startFilter..endFilter }
 
+
                 activity.runOnUiThread {
                     val ts = DateTime.now()
-                    val viewAdapter = HistoricViewAdapter(vm!!, prefs.activeProject, activity, filteredLogs)
-
+                    val observable: BehaviorSubject<List<Pair<Int, FloggingRow>>> = BehaviorSubject.create()
                     val recycleView = root.findViewById<RecyclerView>(R.id.recyclerView)
+                    val viewAdapter = HistoricViewAdapter(vm!!, prefs.activeProject, activity, observable)
+
+                    val viewMng = LinearLayoutManager(activity)
                     viewAdapter.notifyDataSetChanged()
+
                     recycleView.apply {
                         setHasFixedSize(true)
                         layoutManager = viewMng
                         adapter = viewAdapter
                     }
+                    observable.onNext(filteredLogs)
                     setTotalDiff(root.findViewById(R.id.total_hh_mm_flex_diff), filteredLogs)
                     val ts2 = DateTime.now()
                     hideLoading(root)
                     Log.d("Historic", "Rendering took " + (ts2.millis - ts.millis) + " ms")
                 }
             }).start()
-        }
+    }
+
+    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        Log.d("HistoricView", "OnCreateView called")
+        val root = inflater!!.inflate(R.layout.historic_view, container, false) as RelativeLayout
+        val prefs = Prefs(activity)
 
         val filterRoot = root.findViewById<LinearLayout>(R.id.historic_view_filter_layout)
         filterRoot.measure(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT)
         val targetHeight = filterRoot.measuredHeight
+
+        vm = ViewModelProviders.of(activity).get(LogViewModel::class.java)
 
         root.findViewById<ImageView>(R.id.historic_view_filter_show)
                 .setOnClickListener {
@@ -85,7 +100,6 @@ class HistoricView : Fragment() {
                                 filterRoot.layoutParams.height = targetHeight - (targetHeight * interpolatedTime).toInt()
                                 filterRoot.requestLayout()
                             }
-
                         }
                         anim.duration = 400
                         view!!.startAnimation(anim)
@@ -105,11 +119,12 @@ class HistoricView : Fragment() {
         return root
     }
 
-    override fun onPause() {
+    override fun onStop() {
         if (sub != null) {
+            Log.d("HistoricView", "Disposing observable")
             sub!!.dispose()
         }
-        super.onPause()
+        super.onStop()
     }
 
     private fun getDiff(minutes: Int): String {
@@ -159,7 +174,7 @@ class HistoricView : Fragment() {
             val startD = prefs.startDate
 
             val dpYear = startD.year
-            val dpMonth = startD.monthOfYear-1 // subtract with 1 because of DatePicker API
+            val dpMonth = startD.monthOfYear - 1 // subtract with 1 because of DatePicker API
             val dpDay = startD.dayOfMonth
 
             DatePickerDialog(activity, { _: DatePicker,
@@ -183,7 +198,7 @@ class HistoricView : Fragment() {
                     val endD = prefs.endDate
 
                     val dpYear = endD.year
-                    val dpMonth = endD.monthOfYear-1 // subtract with 1 because of DatePicker API
+                    val dpMonth = endD.monthOfYear - 1 // subtract with 1 because of DatePicker API
                     val dpDay = endD.dayOfMonth
 
                     DatePickerDialog(activity, { _: DatePicker,

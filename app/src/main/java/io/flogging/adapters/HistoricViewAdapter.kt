@@ -11,27 +11,38 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import io.flogging.R
+import io.flogging.activities.activityrequests.ActivityRequestCodes
 import io.flogging.activities.logdetail.DetailedLogView
 import io.flogging.activities.main.viewmodels.LogViewModel
 import io.flogging.api.Flogging
 import io.flogging.model.FloggingProject
 import io.flogging.model.FloggingRow
 import io.flogging.util.Flogs
+import io.reactivex.Observable
 
 class HistoricViewAdapter(private val vm : LogViewModel,
                           private val currentProject: FloggingProject,
                           private val context: Context,
-                          private val logs: List<Pair<Int, FloggingRow>>) :
+                          private val logsObservable: Observable<List<Pair<Int, FloggingRow>>>) :
         RecyclerView.Adapter<HistoricViewAdapter.ViewHolder>() {
 
     class ViewHolder(val relativeLayout: RelativeLayout) : RecyclerView.ViewHolder(relativeLayout)
+    private var logs : List<Pair<Int, FloggingRow>>? = null
+
+    init {
+        logsObservable.subscribe {
+            Log.d("HistoricViewModel", "New logs, setting and notifying of change")
+            logs = it
+            this.notifyDataSetChanged()
+        }
+    }
 
     private fun startDetailedActivity(root: View) {
         val intent = Intent(context, DetailedLogView::class.java)
         Log.d("PrintRecordOnclick", (root.findViewById<TextView>(R.id.selector) as TextView).text.toString())
         intent.putExtra("index",
                 (root.findViewById<TextView>(R.id.selector) as TextView).text)
-        context.startActivity(intent)
+        (context as Activity).startActivityForResult(intent, ActivityRequestCodes.DETAILED_LOG)
     }
 
     private fun populateEntry(linearLayout: RelativeLayout,
@@ -97,12 +108,12 @@ class HistoricViewAdapter(private val vm : LogViewModel,
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val entry = logs[position]
+        val entry = logs!![position]
         populateEntry(holder.relativeLayout, entry)
     }
 
     override fun getItemCount(): Int {
-        return logs.size
+        return logs!!.size
     }
 
 }

@@ -37,7 +37,8 @@ class MainActivity : AppCompatActivity() {
     var vm: LogViewModel? = null
     var disposable: Disposable? = null
 
-    private fun setSpinnerListener(spinner: Spinner, prefs: Prefs) {
+    private fun setSpinnerListener(spinner: Spinner,
+                                   prefs: Prefs) {
         val uuid = prefs.uid
 
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -87,7 +88,14 @@ class MainActivity : AppCompatActivity() {
                 val spinner = findViewById<Spinner>(R.id.main_spinner)
                 setSpinnerSelection(spinner, vm!!.projects.value, prefs)
             }
+        } else if (requestCode == ActivityRequestCodes.DETAILED_LOG) {
+            if (resultCode == ActivityRequestCodes.DETAILED_LOG_UPDATED ||
+                    resultCode == ActivityRequestCodes.DETAILED_LOG_DELETED) {
+                Log.d("MainActivity", "Loading logs again")
+                vm!!.loadLogsForProject(prefs.activeProject.projectName, prefs.uid)
+            }
         }
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -163,7 +171,7 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun setUpIfFirstStartUp(prefs : Prefs) {
+    private fun setUpIfFirstStartUp(prefs: Prefs) {
         val uuid = prefs.uid
         val name = prefs.displayName
 
