@@ -3,14 +3,12 @@ package io.flogging.activities.main.fragments
 import android.animation.Animator
 import android.animation.ArgbEvaluator
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.arch.lifecycle.ViewModelProviders
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
 import android.text.Editable
 import android.text.TextWatcher
@@ -37,7 +35,7 @@ class NewLog : Fragment() {
     override fun onCreateView(inflater: LayoutInflater?,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val root = inflater!!.inflate(R.layout.activity_new_log, container, false) as ConstraintLayout
+        val root = inflater!!.inflate(R.layout.new_log, container, false) as LinearLayout
 
         initFeedbackView(root)
         vm = ViewModelProviders.of(activity).get(LogViewModel::class.java)
@@ -61,7 +59,7 @@ class NewLog : Fragment() {
             p0.append(":")
     }
 
-    private fun setDefaults(root: ConstraintLayout) {
+    private fun setDefaults(root: LinearLayout) {
         val now = DateTime.now()
         root.findViewById<EditText>(R.id.new_log_timestamp)
                 .setText(now.year.toString() + "-" + now.toString("MM") + "-" + now.toString("dd"),
@@ -84,12 +82,15 @@ class NewLog : Fragment() {
                 })
     }
 
-    private fun configureSaveButton(root: ConstraintLayout, viewModel: LogViewModel, prefs : Prefs) {
-       root.findViewById<Button>(R.id.new_log_save)
-                .setOnClickListener({
+    private fun configureSaveButton(root: LinearLayout, viewModel: LogViewModel, prefs: Prefs) {
+        root.findViewById<Button>(R.id.new_log_save)
+                .setOnClickListener({ clickElem ->
                     Log.d("Button", "Clicked")
                     Log.d("Button", "Hiding feedback if possible")
                     hideFeedback(root)
+
+                    // Set to disabled because of feedback
+                    clickElem.isEnabled = false
 
                     val maybeStart = (root.findViewById<EditText>(R.id.new_log_start_time) as EditText).text.toString()
                     val start = if (maybeStart.isEmpty()) "8:00" else maybeStart
@@ -134,12 +135,13 @@ class NewLog : Fragment() {
                                     setNegativeFeedback(root, "Failed: " + message)
                                 }
                                 showFeedback(root)
+                                clickElem.isEnabled = true
                             }
                     )
                 })
     }
 
-    private fun initLayout(root: ConstraintLayout,
+    private fun initLayout(root: LinearLayout,
                            viewModel: LogViewModel,
                            prefs: Prefs) {
         configureSaveButton(root, viewModel, prefs)
@@ -165,7 +167,7 @@ class NewLog : Fragment() {
                         .setText(year.toString() + "-" + zeroedMonth + "-" + zeroedDay,
                                 TextView.BufferType.EDITABLE)
 
-            }, dpYear, dpMonth-1, dpDay).show()
+            }, dpYear, dpMonth - 1, dpDay).show()
         })
 
         // Press the start timepicking button that will trigger a Timepicker to show up
@@ -205,7 +207,7 @@ class NewLog : Fragment() {
         })
     }
 
-    private fun decimalCalc(root: ConstraintLayout) {
+    private fun decimalCalc(root: LinearLayout) {
         val startTimeStr = (root.findViewById<EditText>(R.id.new_log_start_time) as EditText).text.toString()
         val startTime = if (startTimeStr == "") "8:30" else startTimeStr
         val endTimeStr = (root.findViewById<EditText>(R.id.new_log_end_time) as EditText).text.toString()
@@ -218,39 +220,43 @@ class NewLog : Fragment() {
                 Flogs.minutesToHHMM(diff)
     }
 
-    private fun setFeedback(root: ConstraintLayout, color: Int, feedbackText: String) {
+    private fun setFeedback(root: LinearLayout, color: Int, feedbackText: String) {
         val tv = root.findViewById<TextView>(R.id.new_log_feedback_text)
         tv.setBackgroundColor(color)
         tv.text = feedbackText
     }
 
-    private fun initFeedbackView(root: ConstraintLayout) {
-        val tv = getFeedbackElement(root).first
+    private fun initFeedbackView(root: LinearLayout) {
+        val tv = getFeedbackElement(root)
         tv.setOnClickListener {
             hideFeedback(root)
         }
     }
 
-    private fun setNegativeFeedback(root: ConstraintLayout, feedbackText: String) {
+    private fun setNegativeFeedback(root: LinearLayout, feedbackText: String) {
         setFeedback(root, resources.getColor(R.color.red), feedbackText)
     }
 
-    private fun setPositiveFeedback(root: ConstraintLayout, feedbackText: String) {
+    private fun setPositiveFeedback(root: LinearLayout, feedbackText: String) {
         setFeedback(root, resources.getColor(R.color.green), feedbackText)
     }
 
-    private fun getFeedbackElement(root: ConstraintLayout): Pair<TextView, Int> {
-        val tv = root.findViewById<TextView>(R.id.new_log_feedback_text)
-        tv.measure(ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT)
-        val targetHeight = tv.measuredHeight
-        return Pair(tv, targetHeight)
+    private fun getFeedbackElement(root: LinearLayout): TextView {
+        return root.findViewById(R.id.new_log_feedback_text)
     }
 
-    private fun showFeedback(root: ConstraintLayout) {
-        val elemTargetHeight = getFeedbackElement(root)
-        val elem = elemTargetHeight.first
-        val targetHeight = elemTargetHeight.second
+    private fun measureElement(tv: TextView): Int {
+        tv.measure(
+                View.MeasureSpec.makeMeasureSpec(tv.width, View.MeasureSpec.AT_MOST),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        return tv.measuredHeight
+
+    }
+
+    private fun showFeedback(root: LinearLayout) {
+        val elem = getFeedbackElement(root)
+        val targetHeight = measureElement(elem)
 
         val anim = object : Animation() {
             override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
@@ -262,7 +268,7 @@ class NewLog : Fragment() {
         view!!.startAnimation(anim)
     }
 
-    private fun hideFeedbackAfterXSeconds(root: ConstraintLayout, seconds: Int) {
+    private fun hideFeedbackAfterXSeconds(root: LinearLayout, seconds: Int) {
         Thread {
             Thread.sleep((seconds * 1000).toLong())
             activity.runOnUiThread {
@@ -271,59 +277,18 @@ class NewLog : Fragment() {
         }.start()
     }
 
-    private fun hideFeedback(root: ConstraintLayout) {
-        val elemTargetHeight = getFeedbackElement(root)
-        val elem = elemTargetHeight.first
-        val targetHeight = elemTargetHeight.second
+    private fun hideFeedback(root: LinearLayout) {
+        val elem = getFeedbackElement(root)
 
         if (elem.height > 0) {
             val anim = object : Animation() {
                 override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
-                    elem.layoutParams.height = targetHeight - (targetHeight * interpolatedTime).toInt()
+                    elem.layoutParams.height = elem.layoutParams.height - (elem.layoutParams.height * interpolatedTime).toInt()
                     elem.requestLayout()
                 }
             }
-            anim.duration = 400
-            val currentColor = elem.currentTextColor
-
-            val bgColor = (elem.background as ColorDrawable).color
-
-            val colorTo = (if (bgColor == resources.getColor(R.color.green)) {
-                R.color.green
-            } else {
-                R.color.red
-            })
-            Log.d("TextAnimation", "Current color: $currentColor Color to: $colorTo")
-            val animation = ValueAnimator.ofObject(
-                    ArgbEvaluator(),
-                    R.color.black,
-                    R.color.white)
-            animation.addUpdateListener {
-                Log.d("TextAnimation", "Value: ${it.animatedValue}")
-                elem.setTextColor(it.animatedValue.toString().toInt())
-            }
-
-            val res = ObjectAnimator.ofInt(elem, "textColor", currentColor, Color.WHITE)
-            res.setEvaluator(ArgbEvaluator())
-            res.duration = 2000
-            res.addListener(object : Animator.AnimatorListener {
-                override fun onAnimationRepeat(p0: Animator?) {}
-                override fun onAnimationCancel(p0: Animator?) {}
-                override fun onAnimationStart(p0: Animator?) {
-                    Log.d("TextAnimation", "Starting text animation(handler)")
-                }
-
-                override fun onAnimationEnd(p0: Animator?) {
-                    Log.d("TextAnimation", "Ending text animation(handler)")
-                    //view!!.startAnimation(anim)
-                }
-            })
-            res.start()
-
-            animation.duration = 2000
-
-            Log.d("TextAnimation", "Starting text animation")
-            //animation.start()
+            anim.duration = 2000
+            view!!.startAnimation(anim)
         }
     }
 

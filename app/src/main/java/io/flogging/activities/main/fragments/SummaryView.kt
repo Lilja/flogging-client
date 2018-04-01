@@ -12,7 +12,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
-import com.google.firebase.auth.FirebaseAuth
 import com.jjoe64.graphview.GraphView
 import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter
 import com.jjoe64.graphview.series.DataPoint
@@ -32,7 +31,7 @@ class SummaryView : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d("SummaryView", "OnCreateView")
-        val root = inflater!!.inflate(R.layout.fragment_summary_view, container, false) as FrameLayout
+        val root = inflater!!.inflate(R.layout.summary_view, container, false) as FrameLayout
         vm = ViewModelProviders.of(activity).get(LogViewModel::class.java)
 
         return root

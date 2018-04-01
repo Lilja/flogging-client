@@ -24,12 +24,12 @@ import org.joda.time.DateTime
 class DetailedLogView : AppCompatActivity() {
 
     private fun compareUniqueKey(log: FloggingRow, uniqueKey: String): Boolean {
-        return Flogging.createIndex(log).equals(uniqueKey)
+        return Flogging.createIndex(log) == uniqueKey
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_detailed_log_view)
+        setContentView(R.layout.detailed_log_view)
         val prefs = Prefs(this)
         val oldUniqueKey = intent.getStringExtra("index")
         val vm = ViewModelProviders.of(this).get(LogViewModel::class.java)

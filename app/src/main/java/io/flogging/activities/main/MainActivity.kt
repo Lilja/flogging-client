@@ -12,6 +12,7 @@ import android.view.Menu
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.ProgressBar
 import android.widget.Spinner
 import io.flogging.R
 import io.flogging.activities.activityrequests.ActivityRequestCodes
@@ -23,7 +24,6 @@ import io.flogging.activities.project.NewProject
 import io.flogging.adapters.ViewPagerAdapter
 import io.flogging.api.Flogging
 import io.flogging.model.FloggingProject
-import io.flogging.model.FloggingRow
 import io.flogging.util.Prefs
 import io.reactivex.disposables.Disposable
 
@@ -83,7 +83,9 @@ class MainActivity : AppCompatActivity() {
         val prefs = Prefs(this)
         if (requestCode == ActivityRequestCodes.NEW_LOG_PROJECT) {
             if (resultCode == ActivityRequestCodes.NEW_LOG_PROJECT_SUCCESS) {
-                getProjects(prefs)
+                val pb = getGlobalLoading()
+                showLoading(pb)
+                getProjects(prefs, pb)
             } else {
                 val spinner = findViewById<Spinner>(R.id.main_spinner)
                 setSpinnerSelection(spinner, vm!!.projects.value, prefs)
@@ -92,10 +94,10 @@ class MainActivity : AppCompatActivity() {
             if (resultCode == ActivityRequestCodes.DETAILED_LOG_UPDATED ||
                     resultCode == ActivityRequestCodes.DETAILED_LOG_DELETED) {
                 Log.d("MainActivity", "Loading logs again")
+                // TODO: Should perhaps indicate loading here?
                 vm!!.loadLogsForProject(prefs.activeProject.projectName, prefs.uid)
             }
         }
-
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -132,16 +134,32 @@ class MainActivity : AppCompatActivity() {
         findViewById<TabLayout>(R.id.main_tab_layout)
                 .setupWithViewPager(pager)
 
-        getProjects(prefs)
+        val pb = getGlobalLoading()
+        showLoading(pb)
+        getProjects(prefs, pb)
         vm!!.loadLogsForProject(prefs.activeProject.projectName, uuid)
         setUpIfFirstStartUp(prefs)
     }
 
-    private fun getProjects(prefs: Prefs) {
+    private fun showLoading(pb: ProgressBar) {
+        pb.visibility = View.VISIBLE
+
+    }
+
+    private fun hideLoading(pb : ProgressBar) {
+        pb.visibility = View.GONE
+    }
+
+    private fun getGlobalLoading(): ProgressBar {
+        return findViewById<ProgressBar>(R.id.main_loading) as ProgressBar
+    }
+
+    private fun getProjects(prefs: Prefs, pb: ProgressBar) {
         vm!!.loadProjects(prefs.uid)
 
         disposable = vm!!.projects.subscribe { rows ->
             Log.d("GetProjects", rows.toString())
+            hideLoading(pb)
             val spinner = findViewById<Spinner>(R.id.main_spinner)
 
             val newMap = rows.map { it.projectName }.plus("* New Project")
