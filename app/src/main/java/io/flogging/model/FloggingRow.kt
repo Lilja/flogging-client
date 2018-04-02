@@ -13,11 +13,11 @@ data class FloggingRow(var timestamp: DateTime,
                        var note: String = "") {
 
     enum class Status(val text: String) {
-        WORKED("WORKED"),
-        PAID_LEAVE("PAID_LEAVE"),
-        FLEX_TIME_OFF("FLEX_TIME_OFF"),
-        PUBLIC_HOLIDAY("PUBLIC_HOLIDAY"),
-        OTHER("OTHER");
+        WORKED("Worked"),
+        PAID_LEAVE("Paid leave"),
+        FLEX_TIME_OFF("Flex time off"),
+        PUBLIC_HOLIDAY("Public holiday"),
+        OTHER("Other");
 
         companion object {
             fun fromValue(status: String): Status {
