@@ -3,7 +3,9 @@ package io.flogging.util
 import android.content.Context
 import android.content.SharedPreferences
 import io.flogging.model.FloggingProject
+import io.flogging.model.FloggingRow
 import org.joda.time.DateTime
+import java.util.logging.Filter
 
 class Prefs(context: Context) {
     private val PREFS_FILENAME = "io.flogging.prefs"
@@ -23,6 +25,8 @@ class Prefs(context: Context) {
     private val FILTER_ENABLE_DATE = "filter_enable_interval_filter"
     private val FILTER_START_DATE = "filter_start_date"
     private val FILTER_END_DATE = "filter_end_date"
+
+    private val FILTER_TYPE_OF_LOG = "filter_type_of_log"
 
     private val prefs: SharedPreferences = context
             .getSharedPreferences(PREFS_FILENAME, Context.MODE_PRIVATE)
@@ -81,6 +85,14 @@ class Prefs(context: Context) {
         }
         set(endDate) {
             prefs.edit().putString(FILTER_END_DATE, endDate.toString(Flogs.YYYY_MM_DD_PATTERN)).apply()
+        }
+
+    var typeOfLog: String
+        get() {
+            return prefs.getString(FILTER_TYPE_OF_LOG, "")
+        }
+        set(value) {
+            prefs.edit().putString(FILTER_TYPE_OF_LOG, value).apply()
         }
 
     var uid: String

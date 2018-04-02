@@ -281,7 +281,9 @@ class Flogging {
 
         }
 
-        fun initUser(uuid: String, name: String, callback: (success: Boolean) -> Unit) {
+        fun initUser(uuid: String,
+                     name: String,
+                     callback: (success: Boolean, message : String) -> Unit) {
             val instance = FirebaseFirestore.getInstance()
             instance.document("users/$uuid")
                     .get()
@@ -294,7 +296,8 @@ class Flogging {
                             instance.document("users/$uuid")
                                     .set(map)
                                     .addOnCompleteListener {
-                                        callback(it.isSuccessful)
+                                        callback(it.isSuccessful,
+                                                it.exception?.message ?: "")
                                     }
                         }
                     }

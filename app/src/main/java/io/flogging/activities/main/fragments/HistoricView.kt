@@ -45,39 +45,54 @@ class HistoricView : Fragment() {
                                      rows: List<FloggingRow>,
                                      prefs: Prefs,
                                      activity: Activity) {
-            Log.d("HistoricView", "Notified of new events")
-            displayLoading(root)
-            Thread(Runnable {
-                val logs = vm!!.getLogsWithDiff(rows, prefs.activeProject)
-                val sortedLogs = if (prefs.chronoicalOrder) logs else logs.reversed()
-                val startFilter = prefs.startDate
-                val endFilter = prefs.endDate
+        displayLoading(root)
+        Thread(Runnable {
+            val logs = vm!!.getLogsWithDiff(rows, prefs.activeProject)
 
-                // Run the logs through a filter of startDate and endDate
-                val filteredLogs = sortedLogs.filter { it.second.timestamp in startFilter..endFilter }
+            // Set the type of log, ideally we should do this with options(scala). But kotlin does
+            // not  have any native options. So nullable it is.
+            // If it's null, that means "all" is selected. Else, go ahead and filter on that
+            // condition
+            val typeOfLogs: FloggingRow.Status? = if (prefs.typeOfLog != "") {
+                FloggingRow.Status.valueOf(prefs.typeOfLog)
+            } else {
+                null
+            }
 
+            val sortedAndFilteredLogs = if (prefs.chronoicalOrder) {
+                logs
+            } else {
+                logs.reversed()
+            }.filter {
+                typeOfLogs == null || it.second.status == typeOfLogs
+            }
 
-                activity.runOnUiThread {
-                    val ts = DateTime.now()
-                    val observable: BehaviorSubject<List<Pair<Int, FloggingRow>>> = BehaviorSubject.create()
-                    val recycleView = root.findViewById<RecyclerView>(R.id.recyclerView)
-                    val viewAdapter = HistoricViewAdapter(vm!!, prefs.activeProject, activity, observable)
+            val startFilter = prefs.startDate
+            val endFilter = prefs.endDate
 
-                    val viewMng = LinearLayoutManager(activity)
-                    viewAdapter.notifyDataSetChanged()
+            // Run the logs through a filter of startDate and endDate
+            val filteredLogs = sortedAndFilteredLogs.filter {
+                it.second.timestamp in startFilter..endFilter
+            }
 
-                    recycleView.apply {
-                        setHasFixedSize(true)
-                        layoutManager = viewMng
-                        adapter = viewAdapter
-                    }
-                    observable.onNext(filteredLogs)
-                    setTotalDiff(root.findViewById(R.id.total_hh_mm_flex_diff), filteredLogs)
-                    val ts2 = DateTime.now()
-                    hideLoading(root)
-                    Log.d("Historic", "Rendering took " + (ts2.millis - ts.millis) + " ms")
+            activity.runOnUiThread {
+                val observable: BehaviorSubject<List<Pair<Int, FloggingRow>>> = BehaviorSubject.create()
+                val recycleView = root.findViewById<RecyclerView>(R.id.recyclerView)
+                val viewAdapter = HistoricViewAdapter(vm!!, prefs.activeProject, activity, observable)
+
+                val viewMng = LinearLayoutManager(activity)
+                viewAdapter.notifyDataSetChanged()
+
+                recycleView.apply {
+                    setHasFixedSize(true)
+                    layoutManager = viewMng
+                    adapter = viewAdapter
                 }
-            }).start()
+                observable.onNext(filteredLogs)
+                setTotalDiff(root.findViewById(R.id.total_hh_mm_flex_diff), filteredLogs)
+                hideLoading(root)
+            }
+        }).start()
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -146,6 +161,16 @@ class HistoricView : Fragment() {
         }
     }
 
+    private fun translateToInternal(localized : String): String {
+       // TODO: fix this shitty translation, only works for english
+        return localized.toUpperCase().replace(" ", "_")
+    }
+    
+    private fun translateFromInternal(internal: String): String {
+       // TODO: fix this shitty translation, only works for english
+        return internal.toUpperCase().replace(" ", "_")
+    }
+
     private fun setupFilterFunctions(prefs: Prefs, root: RelativeLayout) {
         fun setStartDateText() {
             root.findViewById<EditText>(R.id.historic_view_filter_start_date_text)
@@ -165,12 +190,37 @@ class HistoricView : Fragment() {
                     vm!!.omitCurrentLogs()
                 }
 
+        val elem = root.findViewById<Spinner>(R.id.historic_view_filter_type_of_log)
+        val maybeLog = prefs.typeOfLog
+        Log.d("HistoricView", "Getting from prefs and setting: '$maybeLog'")
+        val menuType = if (maybeLog == "") {
+            0
+        } else {
+            (FloggingRow.Status.fromValue(translateToInternal(maybeLog)).ordinal+1)
+        }
+        elem.setSelection(menuType,false)
+
+        elem.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(p0: AdapterView<*>?) {}
+
+            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                Log.d("OnItemSelected", "Clicked!")
+                val item = p0!!.getItemAtPosition(p2).toString()
+                Log.d("HistoricView", "Setting $item")
+                prefs.typeOfLog = if (item == "All") {
+                    ""
+                } else {
+                    translateToInternal(item)
+                }
+                vm?.omitCurrentLogs()
+            }
+        }
+
         setStartDateText()
         setEndDateText()
         val startDateView = root.findViewById<ImageView>(R.id.historic_view_filter_start_date)
 
         startDateView.setOnClickListener {
-
             val startD = prefs.startDate
 
             val dpYear = startD.year

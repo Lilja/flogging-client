@@ -8,6 +8,7 @@
     tools:context="io.flogging.activities.main.MainActivity">
 
     <ProgressBar
+        style="?android:attr/progressBarStyleLarge"
         android:id="@+id/main_loading"
         android:visibility="gone"
         android:layout_centerHorizontal="true"

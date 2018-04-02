@@ -1,13 +1,8 @@
 package io.flogging.activities.main.fragments
 
-import android.animation.Animator
-import android.animation.ArgbEvaluator
-import android.animation.ObjectAnimator
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.arch.lifecycle.ViewModelProviders
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.text.Editable
@@ -86,7 +81,6 @@ class NewLog : Fragment() {
         root.findViewById<Button>(R.id.new_log_save)
                 .setOnClickListener({ clickElem ->
                     Log.d("Button", "Clicked")
-                    Log.d("Button", "Hiding feedback if possible")
                     hideFeedback(root)
 
                     // Set to disabled because of feedback
@@ -108,14 +102,13 @@ class NewLog : Fragment() {
                     val logType = (root.findViewById<Spinner>(R.id.new_log_log_type))
                             .selectedItem
                             .toString()
-                            .replace(" ", "_")
 
                     val textOfTimestamp = (root.findViewById<EditText>(R.id.new_log_timestamp)
                             as EditText).text.toString()
                     val timestamp = DateTime.parse(textOfTimestamp, Flogs.YYYY_MM_DD_PATTERN)
 
                     Log.d("NewLog", "$start $end $breakTime")
-                    viewModel.add_log(
+                    viewModel.addLog(
                             projectName,
                             uuid,
                             textOfTimestamp,

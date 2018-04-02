@@ -52,7 +52,7 @@ class LogViewModel : ViewModel() {
                 val minutes = if (listOfHHMM.size == 2) listOfHHMM[1].toInt() else 0
                 var currentEntryDiff = 0
 
-                when(entry.status) {
+                when (entry.status) {
                     FloggingRow.Status.WORKED,
                     FloggingRow.Status.PAID_LEAVE,
                     FloggingRow.Status.OTHER -> {
@@ -85,7 +85,7 @@ class LogViewModel : ViewModel() {
         )
     }
 
-    fun loadSpecificLogForProject(projectName: String, uuid: String, uniqueKey : String) {
+    fun loadSpecificLogForProject(projectName: String, uuid: String, uniqueKey: String) {
         Flogging.getSpecifcLogForProject(
                 projectName,
                 uuid,
@@ -96,17 +96,13 @@ class LogViewModel : ViewModel() {
         )
     }
 
-    fun set_project_name(projectName: String, uuid: String) {
-        loadLogsForProject(projectName, uuid)
-    }
-
-    fun create_log_from_properties(timestamp: String,
-                                   startDate: String,
-                                   endDate: String,
-                                   breakMinutes: Int,
-                                   decimal: String,
-                                   status: String,
-                                   note: String): FloggingRow {
+    private fun createLogFromProperties(timestamp: String,
+                                        startDate: String,
+                                        endDate: String,
+                                        breakMinutes: Int,
+                                        decimal: String,
+                                        status: String,
+                                        note: String): FloggingRow {
         val ts = DateTime.parse(timestamp, Flogs.YYYY_MM_DD_PATTERN)
         val start = DateTime.parse(startDate, Flogs.HH_MM_PATTERN)
         val end = DateTime.parse(endDate, Flogs.HH_MM_PATTERN)
@@ -117,42 +113,26 @@ class LogViewModel : ViewModel() {
                 end,
                 breakMinutes,
                 decimal,
-                status.toUpperCase(),
+                status,
                 note
         )
     }
 
-    fun add_log(projectName: String,
-                uid: String,
-                log: FloggingRow,
-                success: (b: Boolean, s: String) -> Unit) {
-        Flogging.createLogEntryFromObject(projectName, uid, log, { b: Boolean, s: String ->
-            if (b) {
-                loadLogsForProject(projectName, uid)
-                success(b, s)
-            }
-        })
-    }
-
-    fun set_logs(logs: List<FloggingRow>) {
-        this.logs.onNext(logs)
-    }
-
-    fun add_log(projectName: String,
-                uid: String,
-                timestamp: String,
-                startDate: String,
-                endDate: String,
-                breakMinutes: Int,
-                status: String,
-                note: String,
-                success: (b: Boolean, s: String) -> Unit) {
+    fun addLog(projectName: String,
+               uid: String,
+               timestamp: String,
+               startDate: String,
+               endDate: String,
+               breakMinutes: Int,
+               status: String,
+               note: String,
+               success: (b: Boolean, s: String) -> Unit) {
         val decimal = Flogging.calculateDiff(
                 startDate,
                 endDate,
                 breakMinutes
         ).toString()
-        val log = create_log_from_properties(timestamp, startDate, endDate, breakMinutes, decimal, status, note)
+        val log = createLogFromProperties(timestamp, startDate, endDate, breakMinutes, decimal, status, note)
 
         Flogging.createLogEntryFromObject(projectName, uid, log, { b: Boolean, s: String ->
             if (b) {
@@ -163,30 +143,40 @@ class LogViewModel : ViewModel() {
     }
 
     fun omitCurrentLogs() {
-        logs.onNext(logs.value)
+        if (logs.value != null)
+            logs.onNext(logs.value)
     }
 
-    fun loadProjects(user : String) {
+    fun loadProjects(user: String) {
         Flogging.getProjectsFromUser(user, {
             projects.onNext(it)
         })
     }
 
     fun deleteLog(project: FloggingProject,
-                  user : String,
-                  log : FloggingRow,
+                  user: String,
+                  log: FloggingRow,
                   success: (b: Boolean, s: String) -> Unit) {
-       Flogging.deleteLogEntry(project.projectName, user, log, success)
+        Flogging.deleteLogEntry(project.projectName, user, log, success)
     }
 
     fun updateLog(projectName: FloggingProject,
-                  user : String,
+                  user: String,
                   oldUniqueKey: String,
                   uniqueKey: String,
                   log: FloggingRow,
                   success: (b: Boolean, s: String) -> Unit) {
         Flogging.updateLog(projectName, user, oldUniqueKey,
                 uniqueKey, log, success)
+    }
+
+    fun initUser(uuid: String,
+                 name: String,
+                 success: (b: Boolean, s: String) -> Unit) {
+        Flogging.initUser(uuid, name, {
+            isSuccessful, message ->
+            success(isSuccessful, message)
+        })
     }
 
 }

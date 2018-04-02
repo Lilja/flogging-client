@@ -8,11 +8,24 @@
         <item>Other</item>
     </string-array>
 
-    <string name="flog_status_type_w">Worked</string>
-    <string name="flog_status_type_pl">Paid leave</string>
-    <string name="flog_status_type_fto">Flex time off</string>
-    <string name="flog_status_type_ph">Public holiday</string>
-    <string name="flog_status_type_other">Other</string>
+    <string-array name="log_type_filter">
+        <item>All</item>
+        <item>Worked</item>
+        <item>Paid leave</item>
+        <item>Flex time off</item>
+        <item>Public holiday</item>
+        <item>Other</item>
+    </string-array>
+
+    <string name="type_of_log_worked">Worked</string>
+    <string name="type_of_log_paid_leave">Paid leave</string>
+    <string name="type_of_log_flex_time_off">Flex time off</string>
+    <string name="type_of_log_public_holiday">Public holiday</string>
+    <string name="type_of_log_other">Other</string>
+
+    <string-array name="log_type2">
+
+    </string-array>
 
     <string name="title_activity_new_log">NewLog</string>
 

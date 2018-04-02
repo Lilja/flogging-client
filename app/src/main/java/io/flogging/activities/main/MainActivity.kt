@@ -62,6 +62,8 @@ class MainActivity : AppCompatActivity() {
                             Log.d("OnClickItemSelected", "Active Project" + prefs.activeProject.projectName)
                             Log.d("OnClickItemSelected", currentLog.projectName)
                             prefs.activeProject = currentLog
+                            //val pb = findViewById<ProgressBar>(R.id.main_loading)
+                            //showLoading(pb)
                             vm!!.loadLogsForProject(prefs.activeProject.projectName, uuid)
                         }
                     }
@@ -95,6 +97,8 @@ class MainActivity : AppCompatActivity() {
                     resultCode == ActivityRequestCodes.DETAILED_LOG_DELETED) {
                 Log.d("MainActivity", "Loading logs again")
                 // TODO: Should perhaps indicate loading here?
+                //val pb = getGlobalLoading()
+                //hideLoading(pb)
                 vm!!.loadLogsForProject(prefs.activeProject.projectName, prefs.uid)
             }
         }
@@ -193,7 +197,8 @@ class MainActivity : AppCompatActivity() {
         val uuid = prefs.uid
         val name = prefs.displayName
 
-        Flogging.initUser(uuid, name, {
+        vm!!.initUser(uuid, name, {
+            _, _ ->
             val intent = Intent(this, NewProject::class.java)
             startActivity(intent)
         })

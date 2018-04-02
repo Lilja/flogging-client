@@ -1,5 +1,6 @@
 package io.flogging.model
 
+import android.util.Log
 import io.flogging.R
 import org.joda.time.DateTime
 
@@ -10,12 +11,21 @@ data class FloggingRow(var timestamp: DateTime,
                        var decimal: String,
                        var status: Status,
                        var note: String = "") {
-    enum class Status(value: Int) {
-        WORKED(R.string.flog_status_type_w),
-        PAID_LEAVE(R.string.flog_status_type_pl),
-        FLEX_TIME_OFF(R.string.flog_status_type_fto),
-        PUBLIC_HOLIDAY(R.string.flog_status_type_ph),
-        OTHER(R.string.flog_status_type_other)
+
+    enum class Status(val text: String) {
+        WORKED("WORKED"),
+        PAID_LEAVE("PAID_LEAVE"),
+        FLEX_TIME_OFF("FLEX_TIME_OFF"),
+        PUBLIC_HOLIDAY("PUBLIC_HOLIDAY"),
+        OTHER("OTHER");
+
+        companion object {
+            fun fromValue(status: String): Status {
+                return Status.values().first {
+                    it.text == status
+                }
+            }
+        }
     }
 
     constructor(timestamp: DateTime,
@@ -30,7 +40,9 @@ data class FloggingRow(var timestamp: DateTime,
             endDate,
             breakMinutes,
             decimal,
-            Status.valueOf(status),
+            Status.fromValue(status),
             note
     )
+
+
 }
