@@ -1,7 +1,5 @@
 package io.flogging.model
 
-import android.util.Log
-import io.flogging.R
 import org.joda.time.DateTime
 
 data class FloggingRow(var timestamp: DateTime,

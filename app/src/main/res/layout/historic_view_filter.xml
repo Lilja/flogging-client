@@ -49,12 +49,12 @@
             android:orientation="horizontal">
 
             <EditText
-                android:id="@+id/historic_view_filter_end_date_text"
+                android:id="@+id/historic_view_filter_start_date_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
             <ImageView
-                android:id="@+id/historic_view_filter_end_date"
+                android:id="@+id/historic_view_filter_start_date"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:src="@mipmap/ic_date_range_black_24dp" />
@@ -78,12 +78,12 @@
             android:orientation="horizontal">
 
             <EditText
-                android:id="@+id/historic_view_filter_start_date_text"
+                android:id="@+id/historic_view_filter_end_date_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
             <ImageView
-                android:id="@+id/historic_view_filter_start_date"
+                android:id="@+id/historic_view_filter_end_date"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:src="@mipmap/ic_date_range_black_24dp" />

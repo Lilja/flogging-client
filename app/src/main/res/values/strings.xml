@@ -47,4 +47,5 @@
     <string name="date">Date</string>
     <string name="type_of_event">Type of event</string>
     <string name="type_of_log">Type of log</string>
+    <string name="delete_project">Delete project</string>
 </resources>

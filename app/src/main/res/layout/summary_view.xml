@@ -4,11 +4,9 @@
     android:layout_height="match_parent"
     tools:context="io.flogging.activities.main.fragments.SummaryView">
 
-    <!--
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        -->
 
         <LinearLayout
             android:orientation="vertical"
@@ -31,15 +29,31 @@
                 android:layout_width="match_parent"
                 android:layout_height="300dp" />
 
+            <TableLayout
+                android:padding="10dp"
+                android:id="@+id/summary_missing_log_table"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+                <TableRow
+                    android:id="@+id/summary_view_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                    <TextView
+                        android:textStyle="bold"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:text="Days missed logging"/>
+                </TableRow>
+
+            </TableLayout>
+
             <Button
                 android:id="@+id/summary_delete_project"
-                android:text="Delete project"
+                android:text="@string/delete_project"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
         </LinearLayout>
-    <!--
     </ScrollView>
-    -->
 
 </FrameLayout>

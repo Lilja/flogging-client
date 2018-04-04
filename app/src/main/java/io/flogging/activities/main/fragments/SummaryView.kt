@@ -2,16 +2,16 @@ package io.flogging.activities.main.fragments
 
 import android.app.AlertDialog
 import android.arch.lifecycle.ViewModelProviders
+import android.content.ContentResolver
 import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.content.ContextCompat
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.FrameLayout
-import android.widget.TextView
+import android.widget.*
 import com.jjoe64.graphview.GraphView
 import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter
 import com.jjoe64.graphview.series.DataPoint
@@ -24,6 +24,7 @@ import io.flogging.model.FloggingRow
 import io.flogging.util.Flogs
 import io.flogging.util.Prefs
 import io.reactivex.disposables.Disposable
+import org.joda.time.DateTime
 
 class SummaryView : Fragment() {
     var vm: LogViewModel? = null
@@ -42,13 +43,20 @@ class SummaryView : Fragment() {
         val root = view!! as FrameLayout
 
         sub = vm!!.logs.subscribe {
-            setupGraph(root, it)
-            setupBtn(root)
+            Thread(Runnable {
+                val sortedLogs = it.sortedBy { it.timestamp }
+                val logs = vm!!.indicateMissingEntries(it)
+                activity.runOnUiThread {
+                    setupGraph(root, sortedLogs)
+                    setupBtn(root)
+                    buildMissingLogEntries(root, logs)
+                }
+            }).start()
         }
     }
 
     override fun onStop() {
-        if (sub!=null) {
+        if (sub != null) {
             sub!!.dispose()
         }
 
@@ -87,7 +95,7 @@ class SummaryView : Fragment() {
         }
     }
 
-    private fun setupGraph(root: FrameLayout, logs : List<FloggingRow>) {
+    private fun setupGraph(root: FrameLayout, logs: List<FloggingRow>) {
         val prefs = Prefs(activity)
 
         Log.d("SummaryView", "Getting project name")
@@ -120,13 +128,30 @@ class SummaryView : Fragment() {
         Log.d("SetupTotalHHMM", "Decimal: $decimal")
         val tv = root.findViewById<TextView>(R.id.summary_view_diff_hh_mm_diff)
         if (decimal < 0)
-            tv.setTextColor(resources.getColor(R.color.red))
+            tv.setTextColor(ContextCompat.getColor(activity, R.color.red))
         if (decimal == 0)
-            tv.setTextColor(resources.getColor(R.color.black))
+            tv.setTextColor(ContextCompat.getColor(activity, R.color.black))
         if (decimal > 0)
-            tv.setTextColor(resources.getColor(R.color.green))
+            tv.setTextColor(ContextCompat.getColor(activity, R.color.green))
 
         tv.text = Flogs.hhMMWithDiff(Flogs.minutesToHHMM(decimal))
+    }
+
+    private fun buildMissingLogEntries(root: FrameLayout, missingEntries: List<DateTime>) {
+        val table = root.findViewById<TableLayout>(R.id.summary_missing_log_table)
+        val tableRow = table.getChildAt(0)
+        table.removeAllViews()
+        table.addView(tableRow)
+        Log.d("SummaryView", "Build missing entries " + missingEntries)
+        missingEntries.forEach {
+            val btn = TextView(activity)
+            btn.layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT
+            )
+            btn.text = it.toString(Flogs.YYYY_MM_DD_PATTERN)
+            table.addView(btn)
+        }
     }
 
 }

@@ -68,14 +68,12 @@ class Flogging {
                     DateTime.parse(endTime, Flogs.HH_MM_PATTERN),
                     breakMinutes,
                     Flogs.minutesToHHMM(calculateDiff(startTime, endTime, breakMinutes)),
-                    FloggingRow.Status.valueOf(typeOfLog
-                            .toUpperCase()
-                            .replace(" ", "_")),
+                    FloggingRow.Status.fromValue(typeOfLog),
                     note
             )
         }
 
-        public fun createIndex(floggingRow: FloggingRow): String {
+        fun createIndex(floggingRow: FloggingRow): String {
             return Flogs.YYYY_MM_DD_PATTERN.print(floggingRow.timestamp) + " " +
                     Flogs.HH_MM_PATTERN.print(floggingRow.startDate) + " " +
                     Flogs.HH_MM_PATTERN.print(floggingRow.endDate)
@@ -148,7 +146,7 @@ class Flogging {
                     log.startDate.toString(HH_MM_PATTERN),
                     log.endDate.toString(HH_MM_PATTERN),
                     log.breakMinutes,
-                    log.status.toString(),
+                    log.status.text,
                     log.note,
                     success
             )
@@ -175,6 +173,7 @@ class Flogging {
             val index = createIndex(row)
             val obj = FloggingRowFireStore(row)
 
+            Log.d("Flogging", row.status.text)
             val instance = FirebaseFirestore.getInstance()
             instance
                     .collection("/users/$uuid/projects/$projectName/timestamps")
@@ -296,8 +295,7 @@ class Flogging {
                             instance.document("users/$uuid")
                                     .set(map)
                                     .addOnCompleteListener {
-                                        callback(it.isSuccessful,
-                                                it.exception?.message ?: "")
+                                        callback(it.isSuccessful, it.exception?.message ?: "")
                                     }
                         }
                     }

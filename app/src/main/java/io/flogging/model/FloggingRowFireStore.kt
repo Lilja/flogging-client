@@ -5,7 +5,7 @@ data class FloggingRowFireStore(var timestamp: String,
                                 var endDate: String,
                                 var breakMinutes: Int,
                                 var decimal: String,
-                                var status: FloggingRow.Status,
+                                var status: String,
                                 var note: String = "") {
     // From a real row to firestore row
     constructor(floggingRow: FloggingRow) : this(
@@ -14,7 +14,7 @@ data class FloggingRowFireStore(var timestamp: String,
             floggingRow.endDate.toString("HH:mm"),
             floggingRow.breakMinutes,
             floggingRow.decimal,
-            floggingRow.status,
+            floggingRow.status.text,
             floggingRow.note
     )
 }

@@ -5,6 +5,7 @@ import android.app.TimePickerDialog
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.content.ContextCompat
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -36,7 +37,7 @@ class NewLog : Fragment() {
         vm = ViewModelProviders.of(activity).get(LogViewModel::class.java)
         val prefs = Prefs(activity)
         sub = vm!!.logs.subscribe {
-            setDefaults(root)
+            setDefaults(prefs, root)
             initLayout(root, vm!!, prefs)
         }
         return root
@@ -54,11 +55,9 @@ class NewLog : Fragment() {
             p0.append(":")
     }
 
-    private fun setDefaults(root: LinearLayout) {
-        val now = DateTime.now()
+    private fun setDefaults(prefs: Prefs, root: LinearLayout) {
         root.findViewById<EditText>(R.id.new_log_timestamp)
-                .setText(now.year.toString() + "-" + now.toString("MM") + "-" + now.toString("dd"),
-                        TextView.BufferType.EDITABLE)
+                .setText(prefs.lastInsertedTimestamp.toString(Flogs.YYYY_MM_DD_PATTERN))
         root.findViewById<EditText>(R.id.new_log_start_time)
                 .addTextChangedListener(object : TextWatcher {
                     override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
@@ -154,7 +153,7 @@ class NewLog : Fragment() {
                                          month: Int,
                                          day: Int ->
 
-                val zeroedMonth = if ((month + 1) < 10) "0" + (month + 1) else month.toString()
+                val zeroedMonth = if ((month + 1) < 10) "0" + (month + 1) else (month + 1).toString()
                 val zeroedDay = if (day < 10) "0" + day else day.toString()
                 root.findViewById<EditText>(R.id.new_log_timestamp)
                         .setText(year.toString() + "-" + zeroedMonth + "-" + zeroedDay,
@@ -221,17 +220,15 @@ class NewLog : Fragment() {
 
     private fun initFeedbackView(root: LinearLayout) {
         val tv = getFeedbackElement(root)
-        tv.setOnClickListener {
-            hideFeedback(root)
-        }
+        tv.setOnClickListener { hideFeedback(root) }
     }
 
     private fun setNegativeFeedback(root: LinearLayout, feedbackText: String) {
-        setFeedback(root, resources.getColor(R.color.red), feedbackText)
+        setFeedback(root, ContextCompat.getColor(activity, R.color.red), feedbackText)
     }
 
     private fun setPositiveFeedback(root: LinearLayout, feedbackText: String) {
-        setFeedback(root, resources.getColor(R.color.green), feedbackText)
+        setFeedback(root, ContextCompat.getColor(activity, R.color.green), feedbackText)
     }
 
     private fun getFeedbackElement(root: LinearLayout): TextView {
@@ -258,7 +255,7 @@ class NewLog : Fragment() {
             }
         }
         anim.duration = 400
-        view!!.startAnimation(anim)
+        view?.startAnimation(anim)
     }
 
     private fun hideFeedbackAfterXSeconds(root: LinearLayout, seconds: Int) {
@@ -281,7 +278,7 @@ class NewLog : Fragment() {
                 }
             }
             anim.duration = 2000
-            view!!.startAnimation(anim)
+            view?.startAnimation(anim)
         }
     }
 

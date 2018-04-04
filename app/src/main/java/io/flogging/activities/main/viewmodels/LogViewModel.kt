@@ -1,6 +1,7 @@
 package io.flogging.activities.main.viewmodels
 
 import android.arch.lifecycle.ViewModel
+import android.util.Log
 import io.flogging.api.Flogging
 import io.flogging.model.FloggingProject
 import io.flogging.model.FloggingRow
@@ -58,7 +59,8 @@ class LogViewModel : ViewModel() {
                     FloggingRow.Status.OTHER -> {
                         currentEntryDiff = (hours + minutes)
                     }
-                    FloggingRow.Status.FLEX_TIME_OFF -> {}
+                    FloggingRow.Status.FLEX_TIME_OFF -> {
+                    }
                     FloggingRow.Status.PUBLIC_HOLIDAY -> {
                         currentEntryDiff = 0
                     }
@@ -73,6 +75,48 @@ class LogViewModel : ViewModel() {
             }
         }
         return ArrayList(workSheetDays)
+    }
+
+
+    fun <T> List<T>.sliding(windowSize: Int): List<List<T>> {
+        return this.dropLast(windowSize - 1).mapIndexed { i, s -> this.subList(i, i + windowSize) }
+    }
+
+    fun indicateMissingEntries(logs: List<FloggingRow>): List<DateTime> {
+        fun dayIsNotNextLog(first: DateTime, second: DateTime): Boolean {
+            return first != second && first.plusDays(1) != second
+        }
+
+        fun missingDate(first: FloggingRow, second: FloggingRow): List<DateTime> {
+            var walker = first.timestamp
+            val listOfMissingEntries = mutableListOf<DateTime>()
+
+            while (dayIsNotNextLog(walker, second.timestamp)) {
+                walker = walker.plusDays(1)
+                listOfMissingEntries.add(walker)
+            }
+
+            return listOfMissingEntries
+        }
+
+        val sorted = logs.sortedBy { it.timestamp }
+        // [{ "ts": "01"}, {"ts": "02"}, {"ts": "04"}]
+        //      .sliding(2)
+        // [ [{"ts2: "01"}, {"ts": "02"}], [{"ts": "02"}, {"ts": "04"}], [{"ts":"04"}]
+        val slidedLogs = sorted.sliding(2)
+
+        // If it's an uneven list, remove the last element
+        val slidedLogs2 = if (slidedLogs.size > 1 && slidedLogs.size % 2 != 0)
+            slidedLogs.dropLast(1)
+        else
+            slidedLogs
+
+        return slidedLogs2.flatMap {
+            missingDate(it[0], it[1])
+        }.filter {
+            Flogs.isWorkingDay(it)
+        }
+
     }
 
     fun loadLogsForProject(projectName: String, uuid: String) {
@@ -127,6 +171,7 @@ class LogViewModel : ViewModel() {
                status: String,
                note: String,
                success: (b: Boolean, s: String) -> Unit) {
+        Log.d("LogViewModel", "Status " + status)
         val decimal = Flogging.calculateDiff(
                 startDate,
                 endDate,
@@ -134,6 +179,7 @@ class LogViewModel : ViewModel() {
         ).toString()
         val log = createLogFromProperties(timestamp, startDate, endDate, breakMinutes, decimal, status, note)
 
+        Log.d("LogViewModel", "AddLog" + log)
         Flogging.createLogEntryFromObject(projectName, uid, log, { b: Boolean, s: String ->
             if (b) {
                 loadLogsForProject(projectName, uid)
@@ -173,8 +219,7 @@ class LogViewModel : ViewModel() {
     fun initUser(uuid: String,
                  name: String,
                  success: (b: Boolean, s: String) -> Unit) {
-        Flogging.initUser(uuid, name, {
-            isSuccessful, message ->
+        Flogging.initUser(uuid, name, { isSuccessful, message ->
             success(isSuccessful, message)
         })
     }

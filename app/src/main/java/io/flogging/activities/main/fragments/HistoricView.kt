@@ -8,6 +8,8 @@ import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -59,12 +61,16 @@ class HistoricView : Fragment() {
                 null
             }
 
+            val noteTextFilter = prefs.noteText
+
             val sortedAndFilteredLogs = if (prefs.chronoicalOrder) {
-                logs
+                logs.sortedBy { it.second.timestamp }
             } else {
-                logs.reversed()
+                logs.sortedByDescending { it.second.timestamp }
             }.filter {
                 typeOfLogs == null || it.second.status == typeOfLogs
+            }.filter {
+                noteTextFilter == "" || it.second.note.contains(noteTextFilter)
             }
 
             val startFilter = prefs.startDate
@@ -161,13 +167,13 @@ class HistoricView : Fragment() {
         }
     }
 
-    private fun translateToInternal(localized : String): String {
-       // TODO: fix this shitty translation, only works for english
+    private fun translateToInternal(localized: String): String {
+        // TODO: fix this shitty translation, only works for english
         return localized.toUpperCase().replace(" ", "_")
     }
-    
+
     private fun translateFromInternal(internal: String): String {
-       // TODO: fix this shitty translation, only works for english
+        // TODO: fix this shitty translation, only works for english
         return internal.toUpperCase().replace(" ", "_")
     }
 
@@ -189,6 +195,8 @@ class HistoricView : Fragment() {
                     prefs.chronoicalOrder = b
                     vm!!.omitCurrentLogs()
                 }
+        root.findViewById<EditText>(R.id.historic_view_filter_note_text)
+                .setText(prefs.noteText, TextView.BufferType.EDITABLE)
 
         val elem = root.findViewById<Spinner>(R.id.historic_view_filter_type_of_log)
         val maybeLog = prefs.typeOfLog
@@ -196,9 +204,9 @@ class HistoricView : Fragment() {
         val menuType = if (maybeLog == "") {
             0
         } else {
-            (FloggingRow.Status.fromValue(translateToInternal(maybeLog)).ordinal+1)
+            (FloggingRow.Status.fromValue(translateToInternal(maybeLog)).ordinal + 1)
         }
-        elem.setSelection(menuType,false)
+        elem.setSelection(menuType, false)
 
         elem.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(p0: AdapterView<*>?) {}
@@ -232,7 +240,7 @@ class HistoricView : Fragment() {
                                          month: Int,
                                          day: Int ->
 
-                val zeroedMonth = if ((month + 1) < 10) "0" + (month + 1) else month.toString()
+                val zeroedMonth = if ((month + 1) < 10) "0" + (month + 1) else (month + 1).toString()
                 val zeroedDay = if (day < 10) "0" + day else day.toString()
                 root.findViewById<EditText>(R.id.historic_view_filter_start_date_text)
                         .setText(year.toString() + "-" + zeroedMonth + "-" + zeroedDay,
@@ -256,7 +264,7 @@ class HistoricView : Fragment() {
                                                  month: Int,
                                                  day: Int ->
 
-                        val zeroedMonth = if ((month + 1) < 10) "0" + (month + 1) else month.toString()
+                        val zeroedMonth = if ((month + 1) < 10) "0" + (month + 1) else (month + 1).toString()
                         val zeroedDay = if (day < 10) "0" + day else day.toString()
                         root.findViewById<EditText>(R.id.historic_view_filter_end_date_text)
                                 .setText(year.toString() + "-" + zeroedMonth + "-" + zeroedDay,
@@ -267,6 +275,17 @@ class HistoricView : Fragment() {
 
                     }, dpYear, dpMonth, dpDay).show()
                 }
+
+        root.findViewById<EditText>(R.id.historic_view_filter_note_text)
+                .addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
+                    override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+                        prefs.noteText = p0.toString()
+                        vm!!.omitCurrentLogs()
+                    }
+
+                    override fun afterTextChanged(p0: Editable?) {}
+                })
     }
 
     private fun displayLoading(root: RelativeLayout) {

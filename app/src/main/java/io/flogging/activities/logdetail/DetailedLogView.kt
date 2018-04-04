@@ -153,8 +153,6 @@ class DetailedLogView : AppCompatActivity() {
                         val typeOfLog = findViewById<Spinner>(R.id.detailed_log_view_type_of_log)
                                 .selectedItem
                                 .toString()
-                                .toUpperCase()
-                                .replace(" ", "_")
                         val noteText = (findViewById<EditText>(R.id.detailed_log_view_note) as EditText).text.toString()
 
                         val newLog = FloggingRow(log.timestamp, startDate, endDate, breakMinutes, diff, typeOfLog, noteText)
