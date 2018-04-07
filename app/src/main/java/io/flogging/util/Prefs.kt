@@ -120,7 +120,7 @@ class Prefs(context: Context) {
         }
         set(value) {
             prefs.edit().putString(LAST_INSERTED_TIMESTAMP,
-                    lastInsertedTimestamp.toString(Flogs.YYYY_MM_DD_PATTERN)).apply()
+                    value.toString(Flogs.YYYY_MM_DD_PATTERN)).apply()
         }
 
     var noteText: String

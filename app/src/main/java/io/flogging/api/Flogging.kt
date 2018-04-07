@@ -83,7 +83,7 @@ class Flogging {
                           dailyHour: String,
                           dailyMinutes: String,
                           uid: String,
-                          succeeded: (status: Boolean) -> Unit) {
+                          succeeded: (status: Boolean, message: String) -> Unit) {
             val projectSettings = mapOf(
                     "daily_hour" to dailyHour,
                     "daily_minute" to dailyMinutes,
@@ -95,7 +95,7 @@ class Flogging {
                     .document("users/$uid/projects/$projectName")
                     .set(projectSettings)
                     .addOnCompleteListener {
-                        succeeded(it.isSuccessful)
+                        succeeded(it.isSuccessful, it.exception?.message ?: "")
                     }
         }
 
@@ -282,7 +282,7 @@ class Flogging {
 
         fun initUser(uuid: String,
                      name: String,
-                     callback: (success: Boolean, message : String) -> Unit) {
+                     callback: (success: Boolean, message: String) -> Unit) {
             val instance = FirebaseFirestore.getInstance()
             instance.document("users/$uuid")
                     .get()
@@ -313,7 +313,7 @@ class Flogging {
             instance.document("/users/$user/projects/${projectName.projectName}/timestamps/$oldUniqueKey")
                     .delete()
                     .addOnCompleteListener {
-                        if(it.isSuccessful) {
+                        if (it.isSuccessful) {
                             Log.d("GetLogsForProject", "$projectName $user $uniqueKey")
                             instance.document("/users/$user/projects/${projectName.projectName}/timestamps/$uniqueKey")
                                     .set(fbLog)
@@ -321,7 +321,7 @@ class Flogging {
                                         success(it.isSuccessful, it.exception?.message ?: "")
                                     }
                         } else {
-                            success(false, it.exception?.message?:"")
+                            success(false, it.exception?.message ?: "")
                         }
                     }
 

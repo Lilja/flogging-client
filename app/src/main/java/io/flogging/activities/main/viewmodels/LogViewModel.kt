@@ -224,4 +224,19 @@ class LogViewModel : ViewModel() {
         })
     }
 
+    fun createProject(projectName: String,
+                      dailyHour: String,
+                      dailyMinute: String,
+                      uid: String,
+                      success: (b: Boolean, s: String) -> Unit) {
+        Flogging.createProject(
+                projectName,
+                dailyHour,
+                dailyMinute,
+                uid,
+                { completed, message -> success(completed, message) }
+        )
+
+    }
+
 }

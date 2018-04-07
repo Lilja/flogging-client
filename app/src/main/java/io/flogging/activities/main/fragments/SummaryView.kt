@@ -25,6 +25,7 @@ import io.flogging.util.Flogs
 import io.flogging.util.Prefs
 import io.reactivex.disposables.Disposable
 import org.joda.time.DateTime
+import org.w3c.dom.Text
 
 class SummaryView : Fragment() {
     var vm: LogViewModel? = null
@@ -139,18 +140,24 @@ class SummaryView : Fragment() {
 
     private fun buildMissingLogEntries(root: FrameLayout, missingEntries: List<DateTime>) {
         val table = root.findViewById<TableLayout>(R.id.summary_missing_log_table)
-        val tableRow = table.getChildAt(0)
+        val tableRow = root.findViewById<TextView>(R.id.summary_missing_view_header)
         table.removeAllViews()
-        table.addView(tableRow)
-        Log.d("SummaryView", "Build missing entries " + missingEntries)
-        missingEntries.forEach {
-            val btn = TextView(activity)
-            btn.layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.MATCH_PARENT
-            )
-            btn.text = it.toString(Flogs.YYYY_MM_DD_PATTERN)
-            table.addView(btn)
+
+        if (missingEntries.isNotEmpty()) {
+            tableRow.text = resources.getString(R.string.days_missed_logging)
+
+            Log.d("SummaryView", "Build missing entries " + missingEntries)
+            missingEntries.forEach {
+                val btn = TextView(activity)
+                btn.layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT
+                )
+                btn.text = it.toString(Flogs.YYYY_MM_DD_PATTERN)
+                table.addView(btn)
+            }
+        } else {
+            tableRow.text = resources.getString(R.string.no_days_missed_logging)
         }
     }
 

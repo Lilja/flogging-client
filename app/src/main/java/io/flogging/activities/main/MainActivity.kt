@@ -22,7 +22,6 @@ import io.flogging.activities.main.fragments.SummaryView
 import io.flogging.activities.main.viewmodels.LogViewModel
 import io.flogging.activities.project.NewProject
 import io.flogging.adapters.ViewPagerAdapter
-import io.flogging.api.Flogging
 import io.flogging.model.FloggingProject
 import io.flogging.util.Prefs
 import io.reactivex.disposables.Disposable

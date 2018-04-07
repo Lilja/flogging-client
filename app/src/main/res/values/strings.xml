@@ -48,4 +48,6 @@
     <string name="type_of_event">Type of event</string>
     <string name="type_of_log">Type of log</string>
     <string name="delete_project">Delete project</string>
+    <string name="days_missed_logging">Days missed logging</string>
+    <string name="no_days_missed_logging">No days missed logging</string>
 </resources>

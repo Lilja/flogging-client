@@ -168,8 +168,6 @@ class DetailedLogView : AppCompatActivity() {
                     } catch (e: IllegalArgumentException) {
                         // Silent catch because it's good
                     }
-
-
                 }
     }
 
