@@ -1,6 +1,5 @@
 package io.flogging.api
 
-import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import io.flogging.model.FloggingRow
 import io.flogging.model.FloggingRowFireStore
@@ -17,41 +16,10 @@ class Flogging {
         val YYYY_MM_DD_PATTERN = DateTimeFormat.forPattern("yyyy-MM-dd")
         val HEADER_PATTERN = "E, d MMM y"
 
-        fun <T> List<T>.sliding(windowSize: Int): List<List<T>> {
-            return this.dropLast(windowSize - 1).mapIndexed { i, s -> this.subList(i, i + windowSize) }
-        }
-
-        fun indicateMissingLogEntries(list: List<FloggingRow>, end: DateTime): List<FloggingRow> {
-            fun missingDates(log1: FloggingRow, log2: FloggingRow) {
-            }
-
-            val groupedPerDay = list
-                    .filter { Flogs.isWorkingDay(it.timestamp) }
-                    .sortedBy { it.timestamp.millis }
-                    .groupBy { it.timestamp.toString("dd") }
-
-            val hehe = groupedPerDay
-                    .map { it.value.first() }
-                    .sliding(2)
-            hehe.forEach {
-                it.first()
-            }
-
-            // [ 01, 01, 02, 03, 05]
-            // [ [01, 01], [02], [03], [05]]
-            for ((_, listOfDay) in groupedPerDay) {
-
-            }
-            return listOf()
-        }
-
         fun calculateDiff(startTime: String, endTime: String, breakMinutes: Int): Int {
             val d1 = DateTime.parse(startTime, Flogs.HH_MM_PATTERN)
             val d2 = DateTime.parse(endTime, Flogs.HH_MM_PATTERN).minusMinutes(breakMinutes)
 
-            Log.d("CalculateDiff", (d1).toString())
-            Log.d("CalculateDiff", (d1).toString())
-            Log.d("CalculateDiff", Minutes.minutesBetween(d1, d2).minutes.toString())
             return Minutes.minutesBetween(d1, d2).minutes
         }
 
@@ -102,20 +70,16 @@ class Flogging {
         fun getProjectsFromUser(uuid: String, complete: (projects: List<FloggingProject>) -> Unit) {
             FirebaseFirestore.getInstance().collection("users/$uuid/projects")
                     .get()
-                    .addOnSuccessListener { querySnapshot ->
-                        Log.d("GetProjectsFromUser", "Success")
-                        val k = querySnapshot.documents.map {
-                            firebaseProjectToFloggingProject(it.data)
+                    .addOnCompleteListener {
+                        if (it.isSuccessful) {
+                           complete(it.result.map { firebaseProjectToFloggingProject(it.data) })
+                        } else {
+                            complete(listOf())
                         }
-                        complete(k)
-                    }
-                    .addOnFailureListener {
-                        Log.d("GetProjectsFromUser", "Failure!")
-                        Log.d("GetProjectsFromUser", it.toString())
                     }
         }
 
-        public fun firebaseRowToFloggingRow(values: MutableMap<String, Any>): FloggingRow {
+        private fun firebaseRowToFloggingRow(values: MutableMap<String, Any>): FloggingRow {
             return FloggingRow(
                     DateTime.parse(values.getOrDefault("timestamp", "").toString(), Flogs.YYYY_MM_DD_PATTERN),
                     DateTime.parse(values.getOrDefault("startDate", "").toString(), Flogs.HH_MM_PATTERN),
@@ -152,16 +116,15 @@ class Flogging {
             )
         }
 
-        fun createLogEntry(projectName: String,
-                           uuid: String,
-                           timestamp: String,
-                           startTime: String,
-                           endTime: String,
-                           breakMinutes: Int,
-                           typeOfLog: String,
-                           note: String,
-                           success: (status: Boolean, reason: String) -> Unit) {
-            Log.d("Creating log", projectName + " " + timestamp)
+        private fun createLogEntry(projectName: String,
+                                   uuid: String,
+                                   timestamp: String,
+                                   startTime: String,
+                                   endTime: String,
+                                   breakMinutes: Int,
+                                   typeOfLog: String,
+                                   note: String,
+                                   success: (status: Boolean, reason: String) -> Unit) {
             val d1 = DateTime.parse(startTime, Flogs.HH_MM_PATTERN)
             val d2 = DateTime.parse(endTime, Flogs.HH_MM_PATTERN)
             if (d2.millis < d1.millis)
@@ -173,7 +136,6 @@ class Flogging {
             val index = createIndex(row)
             val obj = FloggingRowFireStore(row)
 
-            Log.d("Flogging", row.status.text)
             val instance = FirebaseFirestore.getInstance()
             instance
                     .collection("/users/$uuid/projects/$projectName/timestamps")
@@ -245,18 +207,15 @@ class Flogging {
         fun getLogsForProject(projectName: String,
                               uuid: String,
                               callback: (rows: List<FloggingRow>) -> Unit) {
-            Log.d("GetLogsForProject", "$projectName $uuid")
             val instance = FirebaseFirestore.getInstance()
             instance.collection("/users/$uuid/projects/$projectName/timestamps")
                     .get()
                     .addOnCompleteListener { task ->
                         val results = task.result
-                        Log.d("GetLogsForProject", results.toString())
                         val records = results.documents.map {
                             firebaseRowToFloggingRow(it.data)
                         }
 
-                        Log.d("GetLogsForProject", records.map { it.timestamp }.toString())
                         callback(records)
                     }
 
@@ -266,13 +225,11 @@ class Flogging {
                                     uuid: String,
                                     uniqueKey: String,
                                     callback: (rows: List<FloggingRow>) -> Unit) {
-            Log.d("GetLogsForProject", "$projectName $uuid $uniqueKey")
             val instance = FirebaseFirestore.getInstance()
             instance.document("/users/$uuid/projects/$projectName/timestamps/$uniqueKey")
                     .get()
                     .addOnCompleteListener { task ->
                         val results = task.result
-                        Log.d("GetLogsForProject", results.toString())
                         val record = firebaseRowToFloggingRow(results.data)
 
                         callback(listOf(record))
@@ -309,12 +266,10 @@ class Flogging {
                       success: (b: Boolean, s: String) -> Unit) {
             val fbLog = FloggingRowFireStore(log)
             val instance = FirebaseFirestore.getInstance()
-            Log.d("GetLogsForProject", "$projectName $user $oldUniqueKey")
             instance.document("/users/$user/projects/${projectName.projectName}/timestamps/$oldUniqueKey")
                     .delete()
                     .addOnCompleteListener {
                         if (it.isSuccessful) {
-                            Log.d("GetLogsForProject", "$projectName $user $uniqueKey")
                             instance.document("/users/$user/projects/${projectName.projectName}/timestamps/$uniqueKey")
                                     .set(fbLog)
                                     .addOnCompleteListener {
@@ -324,8 +279,6 @@ class Flogging {
                             success(false, it.exception?.message ?: "")
                         }
                     }
-
-
         }
     }
 

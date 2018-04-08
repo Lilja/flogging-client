@@ -78,7 +78,7 @@ class LogViewModel : ViewModel() {
     }
 
 
-    fun <T> List<T>.sliding(windowSize: Int): List<List<T>> {
+    private fun <T> List<T>.sliding(windowSize: Int): List<List<T>> {
         return this.dropLast(windowSize - 1).mapIndexed { i, s -> this.subList(i, i + windowSize) }
     }
 
@@ -236,7 +236,6 @@ class LogViewModel : ViewModel() {
                 uid,
                 { completed, message -> success(completed, message) }
         )
-
     }
 
 }
