@@ -37,7 +37,6 @@ class Login : AppCompatActivity() {
         Log.d("LoginView", "OnActivityResult")
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1234) {
-            val response = IdpResponse.fromResultIntent(data)
             if (resultCode == ResultCodes.OK) {
                 val mainIntent = Intent(this, MainActivity::class.java)
                 val auth = FirebaseAuth.getInstance().currentUser!!

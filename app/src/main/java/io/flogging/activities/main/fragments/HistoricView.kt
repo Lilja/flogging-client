@@ -63,7 +63,7 @@ class HistoricView : Fragment() {
 
             val noteTextFilter = prefs.noteText
 
-            val sortedAndFilteredLogs = if (prefs.chronoicalOrder) {
+            val sortedAndFilteredLogs = if (prefs.chronologicalOrder) {
                 logs.sortedBy { it.second.timestamp }
             } else {
                 logs.sortedByDescending { it.second.timestamp }
@@ -192,7 +192,7 @@ class HistoricView : Fragment() {
         root.findViewById<CheckBox>(R.id.historic_view_filter_chronological_order)
                 .setOnCheckedChangeListener { a: CompoundButton?, b: Boolean ->
                     Log.d("Prefs", "Setting chronological order to " + b.toString() + " " + DateTime.now())
-                    prefs.chronoicalOrder = b
+                    prefs.chronologicalOrder = b
                     vm!!.omitCurrentLogs()
                 }
         root.findViewById<EditText>(R.id.historic_view_filter_note_text)

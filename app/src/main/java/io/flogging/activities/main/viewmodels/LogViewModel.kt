@@ -82,16 +82,16 @@ class LogViewModel : ViewModel() {
         return this.dropLast(windowSize - 1).mapIndexed { i, s -> this.subList(i, i + windowSize) }
     }
 
-    fun indicateMissingEntries(logs: List<FloggingRow>): List<DateTime> {
+    fun indicateMissingEntries(logs: List<FloggingRow>, end: DateTime): List<DateTime> {
         fun dayIsNotNextLog(first: DateTime, second: DateTime): Boolean {
             return first != second && first.plusDays(1) != second
         }
 
-        fun missingDate(first: FloggingRow, second: FloggingRow): List<DateTime> {
-            var walker = first.timestamp
+        fun missingDate(first: DateTime, second: DateTime): List<DateTime> {
+            var walker = first
             val listOfMissingEntries = mutableListOf<DateTime>()
 
-            while (dayIsNotNextLog(walker, second.timestamp)) {
+            while (dayIsNotNextLog(walker, second)) {
                 walker = walker.plusDays(1)
                 listOfMissingEntries.add(walker)
             }
@@ -99,19 +99,21 @@ class LogViewModel : ViewModel() {
             return listOfMissingEntries
         }
 
-        val sorted = logs.sortedBy { it.timestamp }
+        val sorted = (
+                logs.map { it.timestamp } + listOf(end)
+                ).sorted()
         // [{ "ts": "01"}, {"ts": "02"}, {"ts": "04"}]
         //      .sliding(2)
         // [ [{"ts2: "01"}, {"ts": "02"}], [{"ts": "02"}, {"ts": "04"}], [{"ts":"04"}]
         val slidedLogs = sorted.sliding(2)
 
         // If it's an uneven list, remove the last element
-        val slidedLogs2 = if (slidedLogs.size > 1 && slidedLogs.size % 2 != 0)
+        val alignedLogs = if (slidedLogs.size > 1 && slidedLogs.size % 2 != 0)
             slidedLogs.dropLast(1)
         else
             slidedLogs
 
-        return slidedLogs2.flatMap {
+        return alignedLogs.flatMap {
             missingDate(it[0], it[1])
         }.filter {
             Flogs.isWorkingDay(it)

@@ -20,10 +20,6 @@ class Flogs {
             return true
         }
 
-        fun isToday(d1: DateTime, d2: DateTime): Boolean {
-            return d1.toLocalDate().isEqual(d2.toLocalDate())
-        }
-
         fun minutesToHHMM(int: Int): String {
             Log.d("minutesToHHMM", int.toString())
             val hourRef = Math.abs(int / 60)

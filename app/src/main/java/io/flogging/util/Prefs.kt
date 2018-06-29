@@ -20,7 +20,6 @@ class Prefs(context: Context) {
     private val DAILY_MINUTE = "active_minute"
 
     private val FILTER_CHRONOLOGICAL_ORDER = "chronological_order"
-    private val FILTER_ENABLE_DATE = "filter_enable_interval_filter"
     private val FILTER_START_DATE = "filter_start_date"
     private val FILTER_END_DATE = "filter_end_date"
 
@@ -46,20 +45,12 @@ class Prefs(context: Context) {
             editor.apply()
         }
 
-    var chronoicalOrder: Boolean
+    var chronologicalOrder: Boolean
         get() {
             return prefs.getBoolean(FILTER_CHRONOLOGICAL_ORDER, false)
         }
         set(chronologicalOrder) {
             prefs.edit().putBoolean(FILTER_CHRONOLOGICAL_ORDER, chronologicalOrder).apply()
-        }
-
-    var enableDateFilter: Boolean
-        get() {
-            return prefs.getBoolean(FILTER_ENABLE_DATE, false)
-        }
-        set(chronologicalOrder) {
-            prefs.edit().putBoolean(FILTER_ENABLE_DATE, chronologicalOrder).apply()
         }
 
     var startDate: DateTime

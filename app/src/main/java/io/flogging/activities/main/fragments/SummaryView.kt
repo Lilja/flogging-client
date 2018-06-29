@@ -42,11 +42,12 @@ class SummaryView : Fragment() {
     override fun onStart() {
         super.onStart()
         val root = view!! as FrameLayout
+        val rightNow = DateTime.now()
 
         sub = vm!!.logs.subscribe {
             Thread(Runnable {
                 val sortedLogs = it.sortedBy { it.timestamp }
-                val logs = vm!!.indicateMissingEntries(it)
+                val logs = vm!!.indicateMissingEntries(it, rightNow)
                 activity.runOnUiThread {
                     setupGraph(root, sortedLogs)
                     setupBtn(root)
